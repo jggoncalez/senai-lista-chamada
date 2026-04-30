@@ -1,14 +1,18 @@
 from pydantic import BaseModel
-from typing import Optional
 
-# TO-DO: Atualizar com campos das listas do sharepoint
+
 class ChamadaCreate(BaseModel):
-    data_aula:  str
+    nome_aluno: str
+    cod_turma: str
+    data_aula: str  # formato ISO: 2026-04-29
     disciplina: str
-    presente:   bool
+    presente: bool
+
 
 class AlunoResponse(BaseModel):
-    nome:      str
-    turma:     str
-    n_chamada: int
-    termo:     int
+    id: int
+    nome: str
+    turma: str
+    cod_turma: str
+    chamada: int
+    termo: int
