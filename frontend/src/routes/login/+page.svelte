@@ -1,7 +1,13 @@
-<div class="min-h-screen m w-full flex items-center justify-center flex-col">
-    <div class="text-base font-normal text-center gap-4 bg-white rounded-lg shadow p-10">
-        <h1>Bem vindo ao Gerenciador de Lista de Chamada</h1>
-        <p>Entre com a Microsoft para ter acesso ao sistema</p>
-        <a href="/" class="bg-blue text-white focus:outline-none w-full bg-blue-600 rounded p-2 hover:bg-blue-700 shadow ">Entrar</a>
-    </div>
+<div class="min-h-screen flex items-center justify-center">
+  <div class="bg-white rounded-2xl shadow-md p-10 w-full max-w-md flex flex-col items-center gap-4">
+    
+    <img src="/senai-logo.png" alt="senai logo" class="w-70">
+    <h1 class="text-xl font-bold">Sistema de Chamada</h1>
+    <p class="text-gray-500">Controle de Presença - SENAI LIMEIRA</p>
+    <a href="/" class="bg-white border border-red-600 text-red-600 font-medium w-full h-10 flex items-center justify-center rounded hover:bg-red-600 hover:text-white transition-colors">
+      Entrar com conta Microsoft
+    </a>
+    <p class="text-gray-500 text-sm">Use sua conta institucional @senaisp.edu.br</p>
+
+  </div>
 </div>
