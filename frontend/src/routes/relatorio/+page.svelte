@@ -1,0 +1,371 @@
+<script lang="ts">
+	let datainicio = $state(new Date().toISOString().split('T')[0]);
+	let datafim = $state(new Date().toISOString().split('T')[0]);
+
+	const nomeTurmaMap: Record<string, string> = {
+		'3DEVT': 'Desenvolvimento de Sistemas',
+		'2ADM': 'Administração',
+		'1DEVT': 'Desenvolvimento de Sistemas',
+		'3ELET': 'Eletrotécnica',
+		'2MEC': 'Mecânica'
+	};
+
+	const disciplinasMap: Record<string, string[]> = {
+		'3DEVT': ['POO - Programação Orientada a Objetos', 'BD - Banco de Dados'],
+		'2ADM': ['GER - Gestão Empresarial', 'MKT - Marketing'],
+		'1DEVT': ['LDL - Lógica de Programação'],
+		'3ELET': ['CH - Circuitos Elétricos'],
+		'2MEC': ['LPA - Lógica do Parafuso']
+	};
+
+	let chamadas = $state([
+		{
+			codTurma: '3DEVT',
+			nomeAluno: 'Ana Maria Silva',
+			dataAula: '29/04/2026',
+			disciplina: 'POO - Programação Orientada a Oração',
+			presente: false
+		},
+		{
+			codTurma: '3DEVT',
+			nomeAluno: 'Amanda Nunes',
+			dataAula: '29/04/2026',
+			disciplina: 'POO - Programação Orientada a Oração',
+			presente: false
+		},
+		{
+			codTurma: '3DEVT',
+			nomeAluno: 'Beatriz Silva',
+			dataAula: '29/04/2026',
+			disciplina: 'POO - Programação Orientada a Oração',
+			presente: false
+		},
+		{
+			codTurma: '3DEVT',
+			nomeAluno: 'Bianca Pinheiro',
+			dataAula: '29/04/2026',
+			disciplina: 'POO - Programação Orientada a Oração',
+			presente: false
+		},
+		{
+			codTurma: '3DEVT',
+			nomeAluno: 'Bruno Araujo',
+			dataAula: '29/04/2026',
+			disciplina: 'POO - Programação Orientada a Oração',
+			presente: false
+		},
+		{
+			codTurma: '3DEVT',
+			nomeAluno: 'Carlos Camargo',
+			dataAula: '29/04/2026',
+			disciplina: 'POO - Programação Orientada a Oração',
+			presente: false
+		},
+		{
+			codTurma: '3DEVT',
+			nomeAluno: 'Daniel Luiz',
+			dataAula: '29/04/2026',
+			disciplina: 'POO - Programação Orientada a Oração',
+			presente: false
+		},
+		{
+			codTurma: '3DEVT',
+			nomeAluno: 'Edson Moraes',
+			dataAula: '29/04/2026',
+			disciplina: 'POO - Programação Orientada a Oração',
+			presente: false
+		},
+		{
+			codTurma: '3DEVT',
+			nomeAluno: 'Erico Baiano',
+			dataAula: '29/04/2026',
+			disciplina: 'POO - Programação Orientada a Oração',
+			presente: false
+		},
+		{
+			codTurma: '3DEVT',
+			nomeAluno: 'Fabricia Lima',
+			dataAula: '29/04/2026',
+			disciplina: 'POO - Programação Orientada a Oração',
+			presente: false
+		},
+		{
+			codTurma: '3DEVT',
+			nomeAluno: 'Gustavo Gonçalvez',
+			dataAula: '29/04/2026',
+			disciplina: 'POO - Programação Orientada a Oração',
+			presente: false
+		},
+		{
+			codTurma: '2ADM',
+			nomeAluno: 'Arthur Simas',
+			dataAula: '29/04/2026',
+			disciplina: 'GER - Gestão de Robux',
+			presente: false
+		},
+		{
+			codTurma: '2ADM',
+			nomeAluno: 'Agatha Pereira',
+			dataAula: '29/04/2026',
+			disciplina: 'GER - Gestão de Robux',
+			presente: false
+		},
+		{
+			codTurma: '2ADM',
+			nomeAluno: 'Bruno Arantes',
+			dataAula: '29/04/2026',
+			disciplina: 'GER - Gestão de Robux',
+			presente: false
+		},
+		{
+			codTurma: '2ADM',
+			nomeAluno: 'Damião Costa',
+			dataAula: '29/04/2026',
+			disciplina: 'GER - Gestão de Robux',
+			presente: false
+		},
+		{
+			codTurma: '1DEVT',
+			nomeAluno: 'Ana Júlia Pereira',
+			dataAula: '29/04/2026',
+			disciplina: 'LDL - Levantamento de Lego',
+			presente: false
+		},
+		{
+			codTurma: '1DEVT',
+			nomeAluno: 'Ana Carolina Oliveira',
+			dataAula: '29/04/2026',
+			disciplina: 'LDL - Levantamento de Lego',
+			presente: false
+		},
+		{
+			codTurma: '3ELET',
+			nomeAluno: 'Abner Silva',
+			dataAula: '29/04/2026',
+			disciplina: 'CH - Tecnologia a Chuveirástica',
+			presente: false
+		},
+		{
+			codTurma: '3ELET',
+			nomeAluno: 'Adão Marcos',
+			dataAula: '29/04/2026',
+			disciplina: 'CH - Tecnologia a Chuveirástica',
+			presente: false
+		},
+		{
+			codTurma: '3ELET',
+			nomeAluno: 'Bruno Moraes',
+			dataAula: '29/04/2026',
+			disciplina: 'CH - Tecnologia a Chuveirástica',
+			presente: false
+		},
+		{
+			codTurma: '3ELET',
+			nomeAluno: 'Caio Rodrigues',
+			dataAula: '29/04/2026',
+			disciplina: 'CH - Tecnologia a Chuveirástica',
+			presente: false
+		},
+		{
+			codTurma: '3ELET',
+			nomeAluno: 'Eymael Santos',
+			dataAula: '29/04/2026',
+			disciplina: 'CH - Tecnologia a Chuveirástica',
+			presente: false
+		},
+		{
+			codTurma: '3ELET',
+			nomeAluno: 'Humberto Golias',
+			dataAula: '29/04/2026',
+			disciplina: 'CH - Tecnologia a Chuveirástica',
+			presente: false
+		},
+		{
+			codTurma: '2MEC',
+			nomeAluno: 'Platão Motta',
+			dataAula: '29/04/2026',
+			disciplina: 'LPA - Lógica do Parafuso',
+			presente: false
+		},
+		{
+			codTurma: '2MEC',
+			nomeAluno: 'Ricardo Beckman',
+			dataAula: '29/04/2026',
+			disciplina: 'LPA - Lógica do Parafuso',
+			presente: false
+		},
+		{
+			codTurma: '2MEC',
+			nomeAluno: 'Sarah Sena',
+			dataAula: '29/04/2026',
+			disciplina: 'LPA - Lógica do Parafuso',
+			presente: true
+		},
+		{
+			codTurma: '2MEC',
+			nomeAluno: 'Thiago Mota',
+			dataAula: '29/04/2026',
+			disciplina: 'LPA - Lógica do Parafuso',
+			presente: false
+		},
+		{
+			codTurma: '2MEC',
+			nomeAluno: 'Welington Silva',
+			dataAula: '29/04/2026',
+			disciplina: 'LPA - Lógica do Parafuso',
+			presente: false
+		}
+	]);
+	let cod = $state('');
+	let codTurmas = $derived([...new Set(chamadas.map((c) => c.codTurma))]);
+	let nomeTurma = $derived(nomeTurmaMap[cod] ?? cod);
+	let disciplinas = $derived(disciplinasMap[cod] ?? []);
+	let disciplinaSelecionada = $state('');
+	let alunosFiltrados = $derived(
+		disciplinaSelecionada === '' || disciplinaSelecionada === 'todas'
+			? chamadas.filter((c) => c.codTurma === cod)
+			: chamadas.filter((c) => c.codTurma === cod && c.disciplina === disciplinaSelecionada)
+	);
+	let totalAlunos = $derived(alunosFiltrados.length);
+	let presentes = $derived(alunosFiltrados.filter((a) => a.presente).length);
+	let ausentes = $derived(totalAlunos - presentes);
+	// Datas únicas do período filtrado — viram as colunas
+	let datas = $derived([...new Set(chamadas.map((c) => c.dataAula))].sort());
+
+	// Alunos únicos da turma filtrada
+	let alunosUnicos = $derived([...new Set(alunosFiltrados.map((c) => c.nomeAluno))]);
+
+	// Função: dado um aluno e uma data, estava presente?
+	function getPresenca(nomeAluno: string, data: string): boolean | null {
+		const registro = chamadas.find(
+			(c) => c.nomeAluno === nomeAluno && c.dataAula === data && c.codTurma === cod
+		);
+		return registro ? registro.presente : null;
+	}
+
+	// Função: % de presença de um aluno
+	function getPorcentagem(nomeAluno: string): number {
+		const registros = chamadas.filter((c) => c.nomeAluno === nomeAluno && c.codTurma === cod);
+		if (!registros.length) return 0;
+		const presenteCount = registros.filter((c) => c.presente).length;
+		return Math.round((presenteCount / registros.length) * 100);
+	}
+</script>
+
+<div class="flex flex-col gap-2">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold">Relatório de Presença</h1>
+    <!-- Botões no canto direito do título -->
+    <div class="flex gap-3">
+      <a 
+        href="/ExportarPDF"
+        class="flex h-10 items-center justify-center gap-2 rounded border border-red-600 bg-white px-4 font-medium text-red-600 transition-colors hover:bg-red-600 hover:text-white"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
+          <path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z"/>
+        </svg>
+        Exportar PDF
+      </a>
+      <a 
+        href="/ExportarEX"
+        class="flex h-10 items-center justify-center gap-2 rounded border border-red-600 bg-white px-4 font-medium text-red-600 transition-colors hover:bg-red-600 hover:text-white"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
+          <path d="M440-120v-480H120v-160q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H440Zm80-80h240v-160H520v160Zm0-240h240v-160H520v160ZM200-680h560v-80H200v80ZM120-80v-80h102q-48-23-77.5-68T115-330q0-79 55.5-134.5T305-520v80q-45 0-77.5 32T195-330q0 39 24 69t61 38v-97h80v240H120Z"/>
+        </svg>
+        Exportar Excel
+      </a>
+    </div>
+  </div>
+
+  <!-- Filtros sem os botões -->
+  <div class="mb-4 flex flex-col gap-6 rounded-xl border border-gray-200 bg-white p-6 md:flex-row md:items-center">
+    <div class="flex min-w-48 flex-col gap-1">
+      <label class="text-xs font-medium tracking-wide text-gray-400 uppercase">Turma</label>
+      <select bind:value={cod} class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none">
+        <option value="">Selecione...</option>
+        {#each codTurmas as codigo}
+          <option value={codigo}>{codigo}</option>
+        {/each}
+      </select>
+    </div>
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-medium tracking-wide text-gray-400 uppercase">Data Início</label>
+      <input type="date" bind:value={datainicio} class="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"/>
+    </div>
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-medium tracking-wide text-gray-400 uppercase">Data Fim</label>
+      <input type="date" bind:value={datafim} class="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"/>
+    </div>
+    <div class="flex min-w-48 flex-col gap-1">
+      <label class="text-xs font-medium tracking-wide text-gray-400 uppercase">Disciplina</label>
+      <select bind:value={disciplinaSelecionada} class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none">
+        <option value="">Selecione...</option>
+        <option value="todas">Todas</option>
+        {#each disciplinas as d}
+          <option value={d}>{d}</option>
+        {/each}
+      </select>
+    </div>
+  </div>
+</div>
+	<!-- Tabela -->
+	<div class="mt-4 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+		<table class="w-full">
+			<thead>
+				<tr class="border-b border-gray-200 bg-gray-50">
+					<th class="w-16 px-6 py-4 text-left text-xs font-semibold text-gray-500">Nº</th>
+					<th class="px-6 py-4 text-left text-xs font-semibold text-gray-500">Nome</th>
+					{#each datas as data}
+						<th class="px-4 py-4 text-center text-xs font-semibold text-gray-500">
+							{data.split('/').slice(0, 2).join('/')}
+						</th>
+					{/each}
+					<th class="px-6 py-4 text-center text-xs font-semibold text-gray-500">% Presença</th>
+				</tr>
+			</thead>
+			<tbody>
+				{#each alunosUnicos as nomeAluno, i}
+					{@const pct = getPorcentagem(nomeAluno)}
+					<tr class="border-b border-gray-100 transition-colors hover:bg-gray-50">
+						<!-- Número -->
+						<td class="px-6 py-4 text-sm font-medium text-red-400">{i + 1}</td>
+
+						<!-- Nome -->
+						<td class="px-6 py-4 text-sm font-medium text-gray-700">{nomeAluno}</td>
+
+						<!-- Uma célula por data -->
+						{#each datas as data}
+							{@const presente = getPresenca(nomeAluno, data)}
+							<td class="px-4 py-4 text-center">
+								{#if presente === true}
+									<span class="text-lg text-green-500">✓</span>
+								{:else if presente === false}
+									<span class="text-lg text-red-400">✕</span>
+								{:else}
+									<span class="text-gray-300">—</span>
+								{/if}
+							</td>
+						{/each}
+
+						<!-- % Presença -->
+						<td class="px-6 py-4 text-center">
+							<span
+								class="rounded-md px-2 py-1 text-xs font-semibold text-white
+              {pct >= 75 ? 'bg-green-600' : 'bg-red-500'}"
+							>
+								{pct}%
+							</span>
+						</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+
+		{#if alunosUnicos.length === 0}
+			<div class="py-12 text-center text-sm text-gray-400">
+				Selecione uma turma para ver o relatório.
+			</div>
+		{/if}
+	</div>
+

@@ -1,9 +1,10 @@
 <script>
 	let { codTurma, nomeTurma, totalAlunos } = $props();
+	
 </script>
 
 <div
-	class="items-left flex h-auto max-w-md flex-col gap-3 rounded-lg border border-gray-200 p-4 shadow-sm"
+	class="items-left flex h-auto w-full flex-col gap-3 rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md"
 >
 	<p class="w-20 rounded-xl bg-red-600 p-1 text-center text-sm font-normal text-white">
 		{codTurma}
@@ -29,7 +30,7 @@
 		</p>
 	</div>
 	<a
-		href="/chamada"
+		href="/chamada/{codTurma}"
 		class="flex h-10 w-full items-center justify-center rounded border border-red-600 bg-white font-medium text-red-600 transition-colors hover:bg-red-600 hover:text-white"
 	>
 		Fazer chamada
