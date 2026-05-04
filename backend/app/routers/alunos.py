@@ -65,6 +65,6 @@ def deletar_aluno(
 ):
     try:
         svc.deletar(aluno_id)
-    except Exception:
-        logger.exception("Erro ao deletar aluno %d", aluno_id)
+    except LookupError:
+        logger.exception("Aluno %d não encontrado para deleção", aluno_id)
         raise HTTPException(status_code=404, detail="Aluno não encontrado.")
