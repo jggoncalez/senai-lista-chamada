@@ -1,6 +1,6 @@
-import html as _html
 """Filtragem pelo Sharepoint
 Sharepoint usa CAML (Collaborative Application Markup Language) para consultas. Esta função ajuda a construir expressões CAML para filtrar itens com base em campos de texto, número ou data."""
+import html as _html
 
 def caml_eq(field: str, tipo: str, valor: str) -> str:
     """Condição de igualdade para campos de texto ou número."""
