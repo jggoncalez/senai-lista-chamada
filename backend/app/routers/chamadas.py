@@ -55,6 +55,13 @@ def deletar_chamada(
 ):
     try:
         svc.sp.deletar(settings.CHAMADAS_LIST_NAME, chamada_id)
-    except Exception:
+    except Exception as e:
+        if getattr(e, "status_code", None) == 404:
+            logger.warning("Chamada %d não encontrada para exclusão", chamada_id)
+            raise HTTPException(status_code=404, detail="Chamada não encontrada.")
+
         logger.exception("Erro ao deletar chamada %d", chamada_id)
-        raise HTTPException(status_code=404, detail="Chamada não encontrada.")
+        raise HTTPException(
+            status_code=502,
+            detail="Erro ao deletar chamada no backend."
+        )
