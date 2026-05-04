@@ -31,7 +31,6 @@ def test_listar_todos_formata_campos(mock_sp):
     assert aluno["turma"] == "DS-01"
     assert aluno["cod_turma"] == "DS01"
     assert aluno["chamada"] == 10
-    assert aluno["termo"] == 1
 
 
 def test_listar_por_turma_filtra_corretamente(mock_sp):

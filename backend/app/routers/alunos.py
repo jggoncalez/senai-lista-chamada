@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from app.services.aluno_service import AlunoService
 from app.models.schemas import AlunoCreate, AlunoUpdate, AlunoResponse
 from app.auth.permissions import exigir_role
+from app.auth.token_validator import validar_token
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +14,8 @@ def get_aluno_service() -> AlunoService:
     return AlunoService()
 
 
-@router.get("", response_model=list[AlunoResponse])
+@router.get("", response_model=list[AlunoResponse],
+            dependencies=[Depends(validar_token)])
 def listar_alunos(
     turma: str | None = Query(default=None),
     svc: AlunoService = Depends(get_aluno_service),
@@ -23,15 +25,16 @@ def listar_alunos(
     return svc.listar_todos()
 
 
-@router.get("/{aluno_id}", response_model=AlunoResponse)
+@router.get("/{aluno_id}", response_model=AlunoResponse,
+            dependencies=[Depends(validar_token)])
 def buscar_aluno(
     aluno_id: int,
     svc: AlunoService = Depends(get_aluno_service),
 ):
     try:
         return svc.buscar_por_id(aluno_id)
-    except Exception:
-        logger.exception("Erro ao buscar aluno %d", aluno_id)
+    except LookupError:
+        logger.exception("Aluno %d não encontrado", aluno_id)
         raise HTTPException(status_code=404, detail="Aluno não encontrado.")
 
 
