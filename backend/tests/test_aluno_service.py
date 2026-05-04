@@ -35,7 +35,8 @@ def test_listar_todos_formata_campos(mock_sp):
 
 
 def test_listar_por_turma_filtra_corretamente(mock_sp):
-    mock_sp.listar.return_value = ALUNOS_RAW
+    # Mock simula retorno do SharePoint após filtro CAML por turma DS01
+    mock_sp.listar.return_value = [ALUNOS_RAW[0], ALUNOS_RAW[1]]
     service = AlunoService()
 
     resultado = service.listar_por_turma("DS01")
@@ -45,7 +46,8 @@ def test_listar_por_turma_filtra_corretamente(mock_sp):
 
 
 def test_listar_por_turma_inexistente_retorna_vazio(mock_sp):
-    mock_sp.listar.return_value = ALUNOS_RAW
+    # Mock simula CAML sem resultados para turma inexistente
+    mock_sp.listar.return_value = []
     service = AlunoService()
 
     resultado = service.listar_por_turma("TURMA_INEXISTENTE")

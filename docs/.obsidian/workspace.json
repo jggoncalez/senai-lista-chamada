@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "00 - Índice.md",
+                "file": "02 - Backend/05 - SharePoint - Listas.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "00 - Índice"
+              "title": "05 - SharePoint - Listas"
             }
           }
         ]
@@ -202,21 +202,21 @@
   "active": "56b06ca771dc35bb",
   "lastOpenFiles": [
     "04 - Infraestrutura/14 - Dependências.md",
-    "Welcome.md",
     "04 - Infraestrutura/13 - Variáveis de Ambiente.md",
-    "04 - Infraestrutura/11 - Hospedagem.md",
     "04 - Infraestrutura/12 - CI-CD.md",
-    "02 - Backend/07 - Backend FastAPI.md",
+    "04 - Infraestrutura/11 - Hospedagem.md",
+    "03 - Frontend/10 - Import de Excel.md",
     "03 - Frontend/09 - Páginas do Sistema.md",
-    "05 - Roadmap/15 - Próximos Passos.md",
-    "00 - Índice.md",
     "03 - Frontend/08 - Frontend SvelteKit.md",
+    "02 - Backend/07 - Backend FastAPI.md",
     "02 - Backend/06 - Autenticação.md",
     "02 - Backend/05 - SharePoint - Listas.md",
+    "00 - Índice.md",
+    "Welcome.md",
+    "05 - Roadmap/15 - Próximos Passos.md",
     "00 - Índice.md.tmp.43553.1777828826801",
     "00 - Índice.md.tmp.43553.1777828805860",
     "10 - Import de Excel.md",
-    "03 - Frontend/10 - Import de Excel.md",
     "01 - Projeto/04 - Estrutura de Pastas.md",
     "01 - Projeto/03 - Arquitetura.md",
     "01 - Projeto/02 - Stack e Decisões Técnicas.md",
