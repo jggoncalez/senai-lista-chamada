@@ -66,19 +66,19 @@ Retry com **backoff exponencial**: 2s → 4s → 8s (padrão: 3 tentativas).
 
 ## Endpoints
 
-| Método | Endpoint | Descrição | Role |
-|---|---|---|---|
-| GET | `/auth/me` | dados do usuário logado | qualquer |
-| GET | `/alunos` | listar todos | qualquer |
-| GET | `/alunos?turma=3DEVT` | filtrar por turma | qualquer |
-| POST | `/alunos` | criar aluno | admin |
-| POST | `/alunos/importar` | importar lote | admin |
-| PATCH | `/alunos/{id}` | atualizar aluno | admin |
-| DELETE | `/alunos/{id}` | deletar aluno | admin |
-| POST | `/chamadas` | registrar chamada | professor, admin |
-| GET | `/chamadas/relatorio` | relatório por turma e data | professor, admin |
-| PATCH | `/chamadas/{id}` | corrigir presença | professor, admin |
-| DELETE | `/chamadas/{id}` | deletar registro | admin |
+| Método | Endpoint              | Descrição                  | Role             |
+| ------ | --------------------- | -------------------------- | ---------------- |
+| GET    | `/auth/me`            | dados do usuário logado    | qualquer         |
+| GET    | `/alunos`             | listar todos               | qualquer         |
+| GET    | `/alunos?turma=3DEVT` | filtrar por turma          | qualquer         |
+| POST   | `/alunos`             | criar aluno                | admin            |
+| POST   | `/alunos/importar`    | importar lote              | admin            |
+| PATCH  | `/alunos/{id}`        | atualizar aluno            | admin            |
+| DELETE | `/alunos/{id}`        | deletar aluno              | admin            |
+| POST   | `/chamadas`           | registrar chamada          | professor, admin |
+| GET    | `/chamadas/relatorio` | relatório por turma e data | professor, admin |
+| PATCH  | `/chamadas/{id}`      | corrigir presença          | professor, admin |
+| DELETE | `/chamadas/{id}`      | deletar registro           | admin            |
 
 ---
 

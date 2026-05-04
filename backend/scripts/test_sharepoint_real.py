@@ -3,17 +3,14 @@ Teste de integração REAL contra o SharePoint.
 Autentica via Device Flow — exige interação no navegador na 1ª execução.
 
 Para rodar:
-    pytest backend/tests/test_sharepoint_real.py -v -s
+    pytest backend/scripts/test_sharepoint_real.py -v -s
 """
 import pytest
-from dotenv import load_dotenv
 
 from app.config import settings
 from app.services.aluno_service import AlunoService
 from app.services.chamada_service import ChamadaService
 from app.models.schemas import ChamadaCreate
-
-load_dotenv()
 
 DATA_AULA = "2026-04-29"
 DISCIPLINA = "Teste-Integração"
