@@ -7,6 +7,12 @@
   let isLogin = $derived(page.url.pathname === '/login');
   let { children } = $props();
 
+  import { goto } from '$app/navigation';
+  import { onMount } from 'svelte';
+
+  onMount(() => {
+    goto('/login');
+  });
 </script>
 
 <svelte:head>
