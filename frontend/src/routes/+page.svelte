@@ -1,11 +1,16 @@
 <script lang="ts">
 	import { chamadas } from '$lib/banco';
+	import { onMount } from 'svelte';
+
+	onMount(() => {
+		chamadas.carregar();
+	});
 	import GraficoPizza from '$lib/components/GraficoPizza.svelte';
 	import GraficoLinhas from '$lib/components/GraficoLinhas.svelte';
 	import GraficoBarras from '$lib/components/GraficoBarras.svelte';
-	let codTurmas = $derived([...new Set(chamadas.map((c) => c.codTurma))]);
+	let codTurmas = $derived([...new Set(chamadas.dados.map((c) => c._F_COD))]);
 	let turmaSelecionada = $state('');
-	let turmas = $derived(chamadas.filter((c) => c.codTurma === turmaSelecionada));
+	let turmas = $derived(chamadas.dados.filter((c) => c.codTurma === turmaSelecionada));
 	let totalAlunos = $derived(turmas.length);
 	let presentes = $derived(turmas.filter((c) => c.presente === true).length);
 	let ausentes = $derived(totalAlunos - presentes);
