@@ -1,4 +1,5 @@
 from office365.sharepoint.client_context import ClientContext
+from office365.sharepoint.listitems.caml.query import CamlQuery
 from app.auth.microsoft_context import get_sharepoint_context
 from app.utils.retry import com_retry
 
@@ -6,14 +7,15 @@ class SharePointService:
     def __init__(self):
         self.ctx: ClientContext = get_sharepoint_context()
 
-    def listar(self, nome_lista: str) -> list[dict]:
+    def listar(self, nome_lista: str, filtro_caml: str | None = None) -> list[dict]:
         def _exec():
-            items = (
-                self.ctx.web
-                .lists.get_by_title(nome_lista)
-                .items.get()
-                .execute_query()
-            )
+            lista = self.ctx.web.lists.get_by_title(nome_lista)
+            if filtro_caml:
+                caml = CamlQuery()
+                caml.ViewXml = filtro_caml
+                items = lista.get_items(caml).execute_query()
+            else:
+                items = lista.items.get().execute_query()
             return [item.properties for item in items]
         return com_retry(_exec)
 
