@@ -39,3 +39,12 @@ class ChamadaUpdate(BaseModel):
 class ChamadaResponse(BaseModel):
     id: int | None
     presente: bool
+
+
+class ChamadaListResponse(BaseModel):
+    id: int | None = None
+    nome_aluno: str
+    cod_turma: str
+    data_aula: str
+    disciplina: str
+    presente: bool
