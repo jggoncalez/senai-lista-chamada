@@ -31,6 +31,12 @@ export interface TurmaItem {
   totalAlunos: number;
 }
 
+export interface ProfessorResponse {
+  nome: string;
+  email: string;
+  roles: string[];
+}
+
 export async function apiFetch(path: string, options: RequestInit = {}) {
   const res = await fetch(`${BASE}${path}`, {
     ...options,
@@ -41,6 +47,9 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
   });
   if (!res.ok) throw new Error(`Erro ${res.status}`);
   return res.json();
+}
+export const usuario =  {
+ buscar: () =>  apiFetch('/auth/me') as Promise<ProfessorResponse>
 }
 
 export const alunos = {

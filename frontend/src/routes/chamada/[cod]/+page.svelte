@@ -1,22 +1,34 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { onMount } from 'svelte';
-  import { disciplinasMap } from '$lib/banco';
-  import { alunos as alunosApi, chamadas as chamadasApi } from '$lib/api';
+  import { alunos as alunosApi, chamadas as chamadasApi,} from '$lib/api';
+  import type { ChamadaItem } from '$lib/api';
   import type { ChamadaCreate } from '$lib/api';
+  import { goto } from '$app/navigation';
 
   let cod = page.params.cod ?? '3DEVT';
-  let disciplinas = $derived(disciplinasMap[cod] ?? []);
   let dataAula = $state(new Date().toISOString().split('T')[0]);
   let disciplinaSelecionada = $state('');
 
   interface Aluno { id: number; nome: string; turma: string; cod_turma: string; chamada: number | null; }
-  let listaAlunos = $state<Aluno[]>([]);
+  let listaAlunos = $state<Aluno[]>([]) ;
   let carregando = $state(true);
   let erro = $state('');
   let presencaMap = $state<Record<string, boolean>>({});
 
   let nomeTurma = $derived(listaAlunos[0]?.turma ?? cod);
+  let chamadaTurma = $state<ChamadaItem[]>([]);
+    $effect(() => {
+    if (cod) {
+      chamadasApi.listarPorTurma(cod).then((data) => {
+        chamadaTurma = data;
+      });
+    } else {
+      chamadaTurma = [];
+    }
+  });
+   let disciplinas = $derived([...new Set(chamadaTurma.map((c) => c.disciplina))].sort());
+
   let totalAlunos = $derived(listaAlunos.length);
   let presentes = $derived(Object.values(presencaMap).filter(Boolean).length);
   let ausentes = $derived(totalAlunos - presentes);
@@ -32,24 +44,23 @@
     }
   });
 
-  async function salvarChamada() {
-    if (!disciplinaSelecionada) return;
-    let sucesso = 0, falhas = 0;
-    for (const aluno of listaAlunos) {
-      const dados: ChamadaCreate = {
-        nome_aluno: aluno.nome, cod_turma: cod,
-        data_aula: dataAula, disciplina: disciplinaSelecionada,
-        presente: presencaMap[aluno.nome] ?? true
-      };
-      try { await chamadasApi.registrar(dados); sucesso++; }
-      catch { falhas++; }
-    }
-    alert(`Chamada salva! ${sucesso} registros.${falhas > 0 ? ` ${falhas} falhas.` : ''}`);
-  }
 
   function togglePresenca(nomeAluno: string) {
     presencaMap[nomeAluno] = !presencaMap[nomeAluno];
   }
+
+function irParaConfirmar() {
+  goto(`/chamada/${cod}/confirmar`, {
+    state: {
+      // Use $state.snapshot() diretamente aqui
+      nomeTurma: $state.snapshot(nomeTurma),
+      dataAula: $state.snapshot(dataAula),
+      disciplinaSelecionada: $state.snapshot(disciplinaSelecionada),
+      presencaMap: $state.snapshot(presencaMap),
+      listaAlunos: $state.snapshot(listaAlunos)
+    }
+  });
+}
 </script>
 
 <!-- Breadcrumb -->
@@ -153,25 +164,15 @@
   {/if}
 </div>
 
-<!-- {#if disciplinaSelecionada && !carregando && !erro}
+{#if disciplinaSelecionada && !carregando && !erro}
   <div class="mt-6 flex justify-end">
     <button
-      onclick={salvarChamada}
+      onclick={irParaConfirmar}
       class="bg-red-600 hover:bg-red-700 text-white font-medium px-6 py-2.5 rounded-xl transition-colors"
     >
       Salvar Chamada
     </button>
   </div>
-{/if} -->
-
-<!-- Botão salvar — só aparece quando disciplina selecionada -->
-{#if disciplinaSelecionada}
-	<div class="mt-6 flex justify-end">
-		<a
-			href="/chamada/{cod}/confirmar"
-			class="rounded-xl bg-red-600 px-6 py-2.5 font-medium text-white transition-colors hover:bg-red-700"
-		>
-			Salvar Chamada
-		</a>
-	</div>
 {/if}
+
+

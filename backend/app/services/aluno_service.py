@@ -9,7 +9,6 @@ _F_CHAMADA = "Chamada"
 
 _CAMPO_MAP = {"nome": _F_NOME, "turma": _F_TURMA, "cod_turma": _F_COD}
 
-
 class AlunoService:
     def __init__(self):
         self.sp = SharePointService()
