@@ -15,6 +15,7 @@
 
     let options = {
         reponsive: true,
+        maintainAspectRatio: false,
         plugins: {
             legend: {
                 /** @type {'bottom'}*/
@@ -27,4 +28,6 @@
     }
 </script>
 
-<Bar {data} {options} />
+<div class="w-full" style="height: 400px;">
+    <Bar {data} {options} />
+</div>

@@ -7,7 +7,7 @@
     User = await usuario.buscar();
   });
 </script>
-<nav class="bg-white border-b border-gray-200 px-6 h-16 flex items-center justify-between">
+<nav class="bg-white border-b border-gray-200 px-6 h-16 flex items-center justify-between sticky top-0">
   
   <div class="flex items-center gap-3">
     <img src="/senai-logo.png" alt="SENAI" class="h-20">
