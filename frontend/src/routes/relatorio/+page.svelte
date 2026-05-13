@@ -1,51 +1,74 @@
 <script lang="ts">
-	import { nomeTurmaMap, disciplinasMap, chamadas} from '$lib/banco';
+	import { onMount } from 'svelte';
+	import { turmas as turmasApi, chamadas as chamadasApi } from '$lib/api';
+	import type { ChamadaItem, TurmaItem } from '$lib/api';
+
 	let datainicio = $state(new Date().toISOString().split('T')[0]);
 	let datafim = $state(new Date().toISOString().split('T')[0]);
 	let cod = $state('');
-	let codTurmas = $derived([...new Set(chamadas.map((c) => c.codTurma))]);
-	let nomeTurma = $derived(nomeTurmaMap[cod] ?? cod);
-	let disciplinas = $derived(disciplinasMap[cod] ?? []);
 	let disciplinaSelecionada = $state('');
+
+	let turmasList = $state<TurmaItem[]>([]);
+	let chamadaTurma = $state<ChamadaItem[]>([]);
+
+	onMount(async () => {
+		turmasList = await turmasApi.listar();
+	});
+
+	$effect(() => {
+		if (cod) {
+			chamadasApi.listarPorTurma(cod).then((data) => {
+				chamadaTurma = data;
+			});
+			disciplinaSelecionada = '';
+		} else {
+			chamadaTurma = [];
+		}
+	});
+
+	let codTurmas = $derived(turmasList.map((t) => t.cod));
+	let disciplinas = $derived([...new Set(chamadaTurma.map((c) => c.disciplina))].sort());
+
 	let alunosFiltrados = $derived(
-		disciplinaSelecionada === '' || disciplinaSelecionada === 'todas'
-			? chamadas.filter((c) => c.codTurma === cod)
-			: chamadas.filter((c) => c.codTurma === cod && c.disciplina === disciplinaSelecionada)
+		chamadaTurma.filter((c) => {
+			const dataAula = c.data_aula.slice(0, 10);
+			const dataOk = dataAula >= datainicio && dataAula <= datafim;
+			const discOk =
+				disciplinaSelecionada === '' ||
+				disciplinaSelecionada === 'todas' ||
+				c.disciplina === disciplinaSelecionada;
+			return dataOk && discOk;
+		})
 	);
+
 	let totalAlunos = $derived(alunosFiltrados.length);
 	let presentes = $derived(alunosFiltrados.filter((a) => a.presente).length);
 	let ausentes = $derived(totalAlunos - presentes);
-	// Datas únicas do período filtrado — viram as colunas
-	let datas = $derived([...new Set(chamadas.map((c) => c.dataAula))].sort());
 
-	// Alunos únicos da turma filtrada
-	let alunosUnicos = $derived([...new Set(alunosFiltrados.map((c) => c.nomeAluno))]);
+	let datas = $derived([...new Set(alunosFiltrados.map((c) => c.data_aula.slice(0, 10)))].sort());
+	let alunosUnicos = $derived([...new Set(alunosFiltrados.map((c) => c.nome_aluno))]);
 
-	// Função: dado um aluno e uma data, estava presente?
 	function getPresenca(nomeAluno: string, data: string): boolean | null {
-		const registro = chamadas.find(
-			(c) => c.nomeAluno === nomeAluno && c.dataAula === data && c.codTurma === cod
+		const registro = chamadaTurma.find(
+			(c) => c.nome_aluno === nomeAluno && c.data_aula.slice(0, 10) === data && c.cod_turma === cod
 		);
 		return registro ? registro.presente : null;
 	}
 
-	// Função: % de presença de um aluno
 	function getPorcentagem(nomeAluno: string): number {
-		const registros = chamadas.filter((c) => c.nomeAluno === nomeAluno && c.codTurma === cod);
+		const registros = chamadaTurma.filter(
+			(c) => c.nome_aluno === nomeAluno && c.cod_turma === cod
+		);
 		if (!registros.length) return 0;
-		const presenteCount = registros.filter((c) => c.presente).length;
-		return Math.round((presenteCount / registros.length) * 100);
+		return Math.round((registros.filter((c) => c.presente).length / registros.length) * 100);
 	}
-
-	
 </script>
 
 <div class="flex flex-col gap-2">
   <div class="flex items-center justify-between">
     <h1 class="text-2xl font-bold">Relatório de Presença</h1>
-    <!-- Botões no canto direito do título -->
     <div class="flex gap-3">
-      <a 
+      <a
         href="/ExportarPDF"
         class="flex h-10 items-center justify-center gap-2 rounded border border-red-600 bg-white px-4 font-medium text-red-600 transition-colors hover:bg-red-600 hover:text-white"
       >
@@ -54,7 +77,7 @@
         </svg>
         Exportar PDF
       </a>
-      <a 
+      <a
         href="/ExportarEX"
         class="flex h-10 items-center justify-center gap-2 rounded border border-red-600 bg-white px-4 font-medium text-red-600 transition-colors hover:bg-red-600 hover:text-white"
       >
@@ -66,7 +89,6 @@
     </div>
   </div>
 
-  <!-- Filtros sem os botões -->
   <div class="mb-4 flex flex-col gap-6 rounded-xl border border-gray-200 bg-white p-6 md:flex-row md:items-center">
     <div class="flex min-w-48 flex-col gap-1">
       <label class="text-xs font-medium tracking-wide text-gray-400 uppercase">Turma</label>
@@ -97,63 +119,52 @@
     </div>
   </div>
 </div>
-	<!-- Tabela -->
-	<div class="mt-4 overflow-x-auto rounded-xl border border-gray-200 bg-white">
-		<table class="w-full">
-			<thead>
-				<tr class="border-b border-gray-200 bg-gray-50">
-					<th class="w-16 px-6 py-4 text-left text-xs font-semibold text-gray-500">Nº</th>
-					<th class="px-6 py-4 text-left text-xs font-semibold text-gray-500">Nome</th>
-					{#each datas as data}
-						<th class="px-4 py-4 text-center text-xs font-semibold text-gray-500">
-							{data.split('/').slice(0, 2).join('/')}
-						</th>
-					{/each}
-					<th class="px-6 py-4 text-center text-xs font-semibold text-gray-500">% Presença</th>
-				</tr>
-			</thead>
-			<tbody>
-				{#each alunosUnicos as nomeAluno, i}
-					{@const pct = getPorcentagem(nomeAluno)}
-					<tr class="border-b border-gray-100 transition-colors hover:bg-gray-50">
-						<!-- Número -->
-						<td class="px-6 py-4 text-sm font-medium text-red-400">{i + 1}</td>
 
-						<!-- Nome -->
-						<td class="px-6 py-4 text-sm font-medium text-gray-700">{nomeAluno}</td>
+<div class="mt-4 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+  <table class="w-full">
+    <thead>
+      <tr class="border-b border-gray-200 bg-gray-50">
+        <th class="w-16 px-6 py-4 text-left text-xs font-semibold text-gray-500">Nº</th>
+        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500">Nome</th>
+        {#each datas as data}
+          <th class="px-4 py-4 text-center text-xs font-semibold text-gray-500">
+            {data.slice(5).replace('-', '/')}
+          </th>
+        {/each}
+        <th class="px-6 py-4 text-center text-xs font-semibold text-gray-500">% Presença</th>
+      </tr>
+    </thead>
+    <tbody>
+      {#each alunosUnicos as nomeAluno, i}
+        {@const pct = getPorcentagem(nomeAluno)}
+        <tr class="border-b border-gray-100 transition-colors hover:bg-gray-50">
+          <td class="px-6 py-4 text-sm font-medium text-red-400">{i + 1}</td>
+          <td class="px-6 py-4 text-sm font-medium text-gray-700">{nomeAluno}</td>
+          {#each datas as data}
+            {@const presente = getPresenca(nomeAluno, data)}
+            <td class="px-4 py-4 text-center">
+              {#if presente === true}
+                <span class="text-lg text-green-500">✓</span>
+              {:else if presente === false}
+                <span class="text-lg text-red-400">✕</span>
+              {:else}
+                <span class="text-gray-300">—</span>
+              {/if}
+            </td>
+          {/each}
+          <td class="px-6 py-4 text-center">
+            <span class="rounded-md px-2 py-1 text-xs font-semibold text-white {pct >= 75 ? 'bg-green-600' : 'bg-red-500'}">
+              {pct}%
+            </span>
+          </td>
+        </tr>
+      {/each}
+    </tbody>
+  </table>
 
-						<!-- Uma célula por data -->
-						{#each datas as data}
-							{@const presente = getPresenca(nomeAluno, data)}
-							<td class="px-4 py-4 text-center">
-								{#if presente === true}
-									<span class="text-lg text-green-500">✓</span>
-								{:else if presente === false}
-									<span class="text-lg text-red-400">✕</span>
-								{:else}
-									<span class="text-gray-300">—</span>
-								{/if}
-							</td>
-						{/each}
-
-						<!-- % Presença -->
-						<td class="px-6 py-4 text-center">
-							<span
-								class="rounded-md px-2 py-1 text-xs font-semibold text-white
-              {pct >= 75 ? 'bg-green-600' : 'bg-red-500'}"
-							>
-								{pct}%
-							</span>
-						</td>
-					</tr>
-				{/each}
-			</tbody>
-		</table>
-
-		{#if alunosUnicos.length === 0}
-			<div class="py-12 text-center text-sm text-gray-400">
-				Selecione uma turma para ver o relatório.
-			</div>
-		{/if}
-	</div>
-
+  {#if alunosUnicos.length === 0}
+    <div class="py-12 text-center text-sm text-gray-400">
+      Selecione uma turma para ver o relatório.
+    </div>
+  {/if}
+</div>

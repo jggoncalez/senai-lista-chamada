@@ -1,7 +1,7 @@
 import logging
 from fastapi import APIRouter, Depends, HTTPException, Query
 from app.services.chamada_service import ChamadaService
-from app.models.schemas import ChamadaCreate, ChamadaUpdate, ChamadaResponse
+from app.models.schemas import ChamadaCreate, ChamadaUpdate, ChamadaResponse, ChamadaListResponse
 from app.auth.permissions import exigir_role
 from app.config import settings
 
@@ -27,11 +27,11 @@ def registrar_chamada(
         raise HTTPException(status_code=409, detail=str(e))
 
 
-@router.get("/relatorio",
+@router.get("/relatorio", response_model=list[ChamadaListResponse],
             dependencies=[Depends(exigir_role("professor", "admin"))])
 def relatorio(
     turma: str = Query(...),
-    data: str = Query(...),
+    data: str = Query(default=""),
     svc: ChamadaService = Depends(get_chamada_service),
 ):
     return svc.relatorio(turma, data)

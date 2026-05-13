@@ -36,9 +36,20 @@ class ChamadaService:
     def atualizar_presenca(self, item_id: int, presente: bool) -> None:
         self.sp.atualizar(settings.CHAMADAS_LIST_NAME, item_id, {_F_PRESENTE: presente})
 
-    def relatorio(self, cod_turma: str, data: str) -> list[dict]:
+    def relatorio(self, cod_turma: str, data: str = "") -> list[dict]:
         filtro = caml_view(caml_eq(_F_COD, "Text", cod_turma))
         registros = self.sp.listar(settings.CHAMADAS_LIST_NAME, filtro_caml=filtro)
         # Filtragem por data feita em Python para evitar ambiguidades de timezone
         # que o CAML DateTime introduziria ao comparar datas ISO 8601 com offset.
-        return [c for c in registros if c.get(_F_DATA, "").startswith(data)]
+        filtered = [c for c in registros if not data or c.get(_F_DATA, "").startswith(data)]
+        return [
+            {
+                "id": c.get("ID"),
+                "nome_aluno": c.get(_F_NOME, ""),
+                "cod_turma": c.get(_F_COD, ""),
+                "data_aula": c.get(_F_DATA, "")[:10],
+                "disciplina": c.get(_F_DISCIPLINA, ""),
+                "presente": bool(c.get(_F_PRESENTE, False)),
+            }
+            for c in filtered
+        ]
