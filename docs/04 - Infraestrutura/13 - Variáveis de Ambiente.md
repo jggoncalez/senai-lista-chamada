@@ -6,35 +6,21 @@
 
 ---
 
-## `backend/.env`
+## `backend-python/.env`
 
 ```bash
-# ── SharePoint ──────────────────────────────
-SHAREPOINT_URL=https://sesisenaispedu.sharepoint.com/sites/ProtoWebsite
-
-# ── Modo desenvolvimento – usuário e senha ──
-SP_USERNAME=seuemail@sesisenai.com.br
-SP_PASSWORD=suasenha
-
-# ── Modo desenvolvimento – Device Code Flow ─
-# CLIENT_ID=xxxx-xxxx-xxxx
-# TENANT_ID=xxxx-xxxx-xxxx
-
-# ── Modo produção – App Registration ────────
-# CLIENT_ID=xxxx-xxxx-xxxx
-# CLIENT_SECRET=xxxx-xxxx-xxxx
-# TENANT_ID=xxxx-xxxx-xxxx
-
-# ── Nomes das listas ─────────────────────────
-ALUNOS_LIST_NAME=lst_alunos
-CHAMADAS_LIST_NAME=lst_presenca_alunos
-
-# ── App ──────────────────────────────────────
-DEBUG=true
-ALLOWED_ORIGINS=["http://localhost:5173"]
+# ── Azure SQL Database ───────────────────────
+DATABASE_URL=mssql+pymssql://usuario:senha@server.database.windows.net/lista-chamada
 ```
 
-> A lógica de seleção do modo de auth baseada nessas variáveis está em [[06 - Autenticação]].
+> **Formato:** `mssql+pymssql://user:pass@host/database`
+> Não adicionar `?driver=...` — o `pymssql` não usa ODBC.
+
+### `backend-python/.env.example`
+
+```bash
+DATABASE_URL=mssql+pymssql://usuario:senha@server.database.windows.net/db_chamadas
+```
 
 ---
 
@@ -49,13 +35,22 @@ VITE_REDIRECT_URI=http://localhost:5173/login
 
 ---
 
-## Qual modo de auth é ativado?
+## Requisitos de sistema (não são variáveis de ambiente)
 
-| Variáveis presentes | Modo |
-|---|---|
-| `CLIENT_ID` + `CLIENT_SECRET` | App Registration (produção) |
-| `CLIENT_ID` + `TENANT_ID` | Device Code Flow (dev com MFA) |
-| `SP_USERNAME` + `SP_PASSWORD` | Usuário + senha (dev sem MFA) |
+Para `pymssql` funcionar, o `FreeTDS` precisa estar instalado:
+
+```bash
+sudo pacman -S freetds    # Arch / CachyOS
+# ou
+sudo apt install freetds-dev  # Ubuntu / Debian
+```
+
+---
+
+## Banco serverless (Azure SQL)
+
+O Azure SQL no tier **serverless** entra em sleep após inatividade e retorna erro `40613` na primeira requisição.
+O `connect_args={"login_timeout": 60}` no engine aguarda até 60s pelo wake-up automático.
 
 ---
 
@@ -69,6 +64,6 @@ VITE_REDIRECT_URI=http://localhost:5173/login
 
 ## Links relacionados
 
-- [[06 - Autenticação]] — como as variáveis determinam o modo de auth
-- [[07 - Backend FastAPI]] — `config.py` que lê essas variáveis
+- [[07 - Backend FastAPI]] — `database.py` que lê `DATABASE_URL`
+- [[05 - Schema Azure SQL]] — estrutura do banco
 - [[11 - Hospedagem]] — configuração em produção no Azure

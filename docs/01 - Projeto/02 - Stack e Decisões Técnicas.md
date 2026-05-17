@@ -9,9 +9,9 @@
 ## Python + FastAPI
 
 - Professor já conhece Python
-- `Office365-REST-Python-Client` tem suporte nativo para SharePoint
 - FastAPI é async, tipado, gera documentação automática em `/docs`
-- Ecossistema Python forte
+- SQLAlchemy ORM reduz SQL manual e garante segurança contra injeção
+- Ecossistema Python forte para scripting e automações futuras
 
 ## SvelteKit
 
@@ -31,25 +31,52 @@
 ## Por que NÃO C#/.NET?
 
 - Seria a melhor escolha técnica (mesmo ecossistema Microsoft)
-- Professor não conhece — deixado como **meta de médio prazo**
+- Professor não conhece — deixado como **meta de longo prazo**
 
 ---
 
-## Biblioteca SharePoint: `Office365-REST-Python-Client`
+## Banco de dados: Azure SQL Database
+
+Migração do SharePoint para um banco relacional dedicado.
+
+| Aspecto | SharePoint (anterior) | Azure SQL (atual) |
+|---|---|---|
+| Consultas | CAML queries | SQL via SQLAlchemy ORM |
+| Relacionamentos | Manual, via campos de texto | FK reais com integridade referencial |
+| Performance | Lento (REST + SharePoint overhead) | Direto, pool de conexões |
+| Schema | Colunas com nomes codificados (`Cod_x002e_Turma`) | Nomes limpos e tipados |
+| Soft delete | Não suportado nativamente | `ativo BIT DEFAULT 1` |
+| Auth necessária | Microsoft 365 + Office365-REST | String de conexão Azure SQL |
+
+### Driver de conexão: `pymssql` + `FreeTDS`
+
+Escolhido em vez de `pyodbc` por não exigir instalação do driver ODBC da Microsoft (que requer AUR no Arch/CachyOS).
+
+```bash
+sudo pacman -S freetds   # dependência de sistema
+pip install pymssql      # driver Python
+```
+
+Formato da `DATABASE_URL`:
+```
+mssql+pymssql://usuario:senha@server.database.windows.net/database
+```
+
+---
+
+## Biblioteca de ORM: `SQLAlchemy 2.x`
 
 | Prós | Contras |
 |---|---|
-| Alto nível, abstrai URLs e auth | Síncrona (sem async nativo) |
-| CRUD sem montar requests na mão | Sem suporte MSAL oficial |
-| Comunidade ativa | — |
-| Sem vulnerabilidades (verificado Snyk) | — |
-
-> **Alternativa futura:** `msgraph-sdk` — oficial Microsoft, async → ver [[15 - Próximos Passos]]
+| ORM declarativo, sem SQL manual | Curva de aprendizado inicial |
+| Pool de conexões embutido | Migrações requerem Alembic (futuro) |
+| `pool_pre_ping` para Azure SQL serverless | — |
+| Suporte a transactions + rollback automático | — |
 
 ---
 
 ## Links relacionados
 
 - [[03 - Arquitetura]] — como a stack se integra
+- [[05 - Schema Azure SQL]] — tabelas e relacionamentos
 - [[14 - Dependências]] — versões exatas
-- [[06 - Autenticação]] — limitações da biblioteca atual
