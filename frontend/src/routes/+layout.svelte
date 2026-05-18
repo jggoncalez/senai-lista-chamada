@@ -28,6 +28,7 @@
       <Sidebar />
       <main class="flex-1 p-8 bg-gray-50">
         {@render children()}
+        
       </main>
     </div>
   </div>
