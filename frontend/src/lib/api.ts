@@ -54,20 +54,29 @@ export const usuario =  {
 
 export const alunos = {
   listar: () => apiFetch('/alunos') as Promise<AlunoResponse[]>,
-  porTurma: (cod: string) => apiFetch(`/alunos?turma=${cod}`) as Promise<AlunoResponse[]>
+  porTurma: (cod: string) => apiFetch(`/alunos?turma=${cod}`) as Promise<AlunoResponse[]>,
+  importarLote: (dados: unknown[]) =>
+    apiFetch('/alunos/import/batch', { method: 'POST', body: JSON.stringify(dados) })
 };
 
 export const turmas = {
   listar: async (): Promise<TurmaItem[]> => {
     const todos: AlunoResponse[] = await alunos.listar();
-    const map = new Map<string, TurmaItem>();
+    const map = new Map<string, { nomes: Set<string>; nome: string }>();
+    
     for (const a of todos) {
       if (!map.has(a.cod_turma)) {
-        map.set(a.cod_turma, { cod: a.cod_turma, nome: a.turma, totalAlunos: 0 });
+        map.set(a.cod_turma, { nomes: new Set(), nome: a.turma });
       }
-      map.get(a.cod_turma)!.totalAlunos++;
+      // Conta apenas nomes únicos por turma
+      map.get(a.cod_turma)!.nomes.add(a.nome);
     }
-    return [...map.values()];
+    
+    return [...map.entries()].map(([cod, data]) => ({
+      cod,
+      nome: data.nome,
+      totalAlunos: data.nomes.size
+    }));
   }
 };
 

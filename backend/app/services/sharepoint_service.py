@@ -21,13 +21,17 @@ class SharePointService:
 
     def criar(self, nome_lista: str, dados: dict) -> dict:
         def _exec():
-            item = (
-                self.ctx.web
-                .lists.get_by_title(nome_lista)
-                .add_item(dados)
-            )
-            self.ctx.execute_query()
-            return item.properties
+            try:
+                item = (
+                    self.ctx.web
+                    .lists.get_by_title(nome_lista)
+                    .add_item(dados)
+                )
+                self.ctx.execute_query()
+                return item.properties
+            except Exception as e:
+                # Lança erro mais informativo
+                raise Exception(f"Erro ao criar item no SharePoint: {str(e)}. Dados enviados: {dados}") from e
         return com_retry(_exec)
 
     def buscar_por_id(self, nome_lista: str, item_id: int) -> dict:

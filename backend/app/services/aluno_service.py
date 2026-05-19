@@ -15,12 +15,20 @@ class AlunoService:
 
     def criar(self, dados: dict) -> dict:
         campos = {
-            _F_NOME:  dados["nome"],
-            _F_TURMA: dados["turma"],
-            _F_COD:   dados["cod_turma"],
+            _F_NOME:  dados["nome"].strip(),
+            _F_TURMA: dados["turma"].strip(),
+            _F_COD:   dados["cod_turma"].strip(),
         }
+        
+        # Valida campos obrigatórios
+        if not campos[_F_NOME]:
+            raise ValueError("Nome do aluno não pode estar vazio")
+        if not campos[_F_COD]:
+            raise ValueError("Código da turma não pode estar vazio")
+        
+        # Adiciona campos opcionais apenas se forem fornecidos
         if dados.get("chamada") is not None:
-            campos[_F_CHAMADA] = str(dados["chamada"])
+            campos[_F_CHAMADA] = int(dados["chamada"])
 
         raw = self.sp.criar(settings.ALUNOS_LIST_NAME, campos)
         return self._formatar([raw])[0]

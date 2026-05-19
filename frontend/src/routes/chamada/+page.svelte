@@ -13,7 +13,7 @@ onMount(async () => {
 
 <div class="p-4 gap-3 flex flex-col">
   <h1 class="text-xl font-bold text-gray-800">Turmas Disponíveis</h1>
-  <div class="flex flex-row gap-5 w-full items-left justify-between">
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 w-full items-left justify-between">
     {#each turmasList as t}
       <CardTurma
         codTurma={t.cod}
