@@ -1,4 +1,5 @@
 backend/.env
+backend-python/.env
 **/__pycache__/
 **/.pytest_cache/
 docs/.obsidian/workspace.json
