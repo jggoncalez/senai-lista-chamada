@@ -10,11 +10,13 @@
   // Importando os efeitos de transição do Svelte
   import { fade, fly } from 'svelte/transition';
 
-  let isLogin = $derived(page.url.pathname === '/login');
+  let isPublicPage = $derived(['/login', '/login-empresa', '/selecao', '/dashboard-empresa'].includes(page.url.pathname));
   let { children } = $props();
 
   onMount(() => {
-    goto('/login');
+    if (page.url.pathname === '/') {
+      goto('/selecao');
+    }
   });
 </script>
 
@@ -24,7 +26,7 @@
 
 <Acessiblidade />
 
-{#if isLogin}
+{#if isPublicPage}
   <div in:fade={{ duration: 300 }}>
     {@render children()}
   </div>

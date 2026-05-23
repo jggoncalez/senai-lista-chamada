@@ -9,5 +9,8 @@
     </a>
     <p class="text-gray-500 text-sm">Use sua conta institucional @senaisp.edu.br</p>
 
+    <a href="/selecao" class="mt-4 text-sm text-gray-500 hover:text-gray-700 underline">
+      Voltar para seleção
+    </a>
   </div>
 </div>
