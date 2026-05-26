@@ -20,7 +20,7 @@
 
   let options = {
     responsive: true,
-    maintainAspectRatio: false, 
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         /** @type {'bottom'} */
@@ -31,4 +31,7 @@
   };
 </script>
 
-<Line {data} {options} />
+
+<div class="w-full" style="height: 700px;">
+  <Line {data} {options} />
+</div>
