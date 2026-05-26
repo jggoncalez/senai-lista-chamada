@@ -41,7 +41,6 @@
 	"dependencies": {
 		"@azure/msal-browser": "^5.9.0",
 		"accessibility": "^6.1.0",
-		"bits-ui": "^2.18.1",
 		"chart.js": "^4.5.1",
 		"exceljs": "^4.4.0",
 		"file-saver": "^2.0.5",
