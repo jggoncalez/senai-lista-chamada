@@ -30,31 +30,6 @@ export interface ColumnMapping {
   presente?: number | null;
 }
 
-const COLUMN_ALIASES: Record<string, string[]> = {
-  nome: ['nome', 'nome completo', 'aluno', 'nome_aluno', 'nome aluno'],
-  turma: ['turma', 'classe', 'turmas'],
-  cod_turma: [
-    'cod.turma',
-    'cod_turma',
-    'codigo',
-    'cod',
-    'código turma',
-    'código_turma',
-    'codigoturma',
-    'turma_cod',
-    'código',
-    'codigo da turma',
-    'código da turma',
-    'cod da turma',
-    'codigo_da_turma',
-    'codigoturma',
-    'código.turma',
-    'cod turma'
-  ],
-  chamada: ['chamada', 'n.chamada', 'numero', 'nº', 'n'],
-  termo: ['termo', 'semestre']
-};
-
 export function parseExcelFile(file: File): Promise<ParseResult> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();

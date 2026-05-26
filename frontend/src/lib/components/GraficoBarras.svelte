@@ -14,7 +14,7 @@
     })
 
     let options = {
-        reponsive: true,
+        responsive: true,
         maintainAspectRatio: false,
         plugins: {
             legend: {

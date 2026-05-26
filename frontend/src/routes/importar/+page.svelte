@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { parseExcelFile, validateRow } from '$lib/utils/excelParser';
 	import { alunos as alunosApi } from '$lib/api';
-	import type { ParsedRow, ParseResult, ColumnMapping } from '$lib/utils/excelParser';
+	import type { ParsedRow, ParseResult } from '$lib/utils/excelParser';
 
 	let steps = ['Upload', 'Mapeamento', 'Validação', 'Importar'];
 	let stepAtual = $state(0);

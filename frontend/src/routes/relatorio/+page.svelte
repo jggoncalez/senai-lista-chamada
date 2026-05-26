@@ -101,7 +101,9 @@
 		worksheet.addRow([]);
 		worksheet.addRow(['Turma:', cod]);
 		worksheet.addRow(['Período:', `${formatarDataBR(datainicio)} até ${formatarDataBR(datafim)}`]);
-		worksheet.addRow(['Disciplina:', disciplinaSelecionada || 'Todas']);
+		const disciplinaLabel =
+			disciplinaSelecionada === 'todas' ? 'Todas' : disciplinaSelecionada || 'Todas';
+		worksheet.addRow(['Disciplina:', disciplinaLabel]);
 		worksheet.addRow([]);
 
 		['A4', 'A5', 'A6'].forEach((cellId) => {
