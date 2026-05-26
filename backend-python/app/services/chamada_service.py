@@ -3,6 +3,10 @@ from fastapi import HTTPException
 
 from app.models.presenca import PresencaAluno
 from app.models.sessao_aula import SessaoAula
+from app.models.aluno import Aluno
+from app.models.turma import Turma
+from app.models.curso import Curso
+from app.models.turma_disciplina import TurmaDisciplina
 from app.schemas.presenca import PresencaCreate, PresencaUpdate, ChamadaLoteItem
 
 
@@ -106,3 +110,37 @@ def _verificar_sessao(db: Session, sessao_id: int) -> None:
     sessao = db.query(SessaoAula).filter(SessaoAula.id == sessao_id).first()
     if not sessao:
         raise HTTPException(status_code=404, detail="Sessão de aula não encontrada")
+
+def relatorio(db: Session, turma_cod: str, data: str = None):
+    query = db.query(
+        PresencaAluno.id,
+        Aluno.nome.label("nome_aluno"),
+        Turma.cod_turma,
+        Aluno.chamada,
+        SessaoAula.data_aula,
+        Curso.nome.label("disciplina"),
+        PresencaAluno.presente
+    ).join(Aluno, PresencaAluno.aluno_id == Aluno.id) \
+     .join(SessaoAula, PresencaAluno.sessao_id == SessaoAula.id) \
+     .join(TurmaDisciplina, SessaoAula.turma_disciplina_id == TurmaDisciplina.id) \
+     .join(Turma, TurmaDisciplina.turma_id == Turma.id) \
+     .join(Curso, TurmaDisciplina.curso_id == Curso.id) \
+     .filter(Turma.cod_turma == turma_cod)
+    
+    if data:
+        query = query.filter(SessaoAula.data_aula == data)
+        
+    results = query.all()
+    
+    # Converter para lista de dicts para o schema
+    return [
+        {
+            "id": r.id,
+            "nome_aluno": r.nome_aluno,
+            "cod_turma": r.cod_turma,
+            "chamada": r.chamada,
+            "data_aula": r.data_aula,
+            "disciplina": r.disciplina,
+            "presente": r.presente
+        } for r in results
+    ]

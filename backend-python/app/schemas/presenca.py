@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 from typing import Optional
+from datetime import date
 
 
 class PresencaBase(BaseModel):
@@ -33,3 +34,14 @@ class ChamadaLoteItem(BaseModel):
 class ChamadaLoteCreate(BaseModel):
     sessao_id: int
     presencas: list[ChamadaLoteItem]
+
+class ChamadaRelatorioResponse(BaseModel):
+    id: Optional[int] = None
+    nome_aluno: str
+    cod_turma: str
+    chamada: Optional[int] = None
+    data_aula: date
+    disciplina: str
+    presente: bool
+
+    model_config = ConfigDict(from_attributes=True)

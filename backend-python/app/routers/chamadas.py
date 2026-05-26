@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
+from typing import Optional
 
 from app.database import get_db
 from app.schemas.presenca import (
@@ -7,6 +8,7 @@ from app.schemas.presenca import (
     PresencaUpdate,
     PresencaResponse,
     ChamadaLoteCreate,
+    ChamadaRelatorioResponse,
 )
 from app.services import chamada_service
 
@@ -31,3 +33,7 @@ def registrar(dados: PresencaCreate, db: Session = Depends(get_db)):
 @router.patch("/{presenca_id}", response_model=PresencaResponse)
 def atualizar(presenca_id: int, dados: PresencaUpdate, db: Session = Depends(get_db)):
     return chamada_service.atualizar(db, presenca_id, dados)
+
+@router.get("/relatorio", response_model=list[ChamadaRelatorioResponse])
+def relatorio(turma: str, data: Optional[str] = None, db: Session = Depends(get_db)):
+    return chamada_service.relatorio(db, turma, data)

@@ -1,18 +1,40 @@
 from datetime import datetime
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from fastapi import HTTPException
 
 from app.models.aluno import Aluno
-from app.schemas.aluno import AlunoCreate, AlunoUpdate
+from app.models.turma import Turma
+from app.schemas.aluno import AlunoCreate, AlunoUpdate, AlunoImport
 
 
-def listar(db: Session, turma_id: int | None = None, apenas_ativos: bool = True) -> list[Aluno]:
-    q = db.query(Aluno)
+def listar(db: Session, turma_cod: str | None = None, apenas_ativos: bool = True) -> list[dict]:
+    q = db.query(Aluno).options(joinedload(Aluno.turma))
     if apenas_ativos:
         q = q.filter(Aluno.ativo == True)
-    if turma_id is not None:
-        q = q.filter(Aluno.turma_id == turma_id)
-    return q.all()
+    if turma_cod is not None:
+        q = q.join(Turma).filter(Turma.cod_turma == turma_cod)
+    
+    alunos = q.all()
+    
+    # Mapear para o formato que o schema AlunoResponse espera (com turma e cod_turma)
+    resultado = []
+    for a in alunos:
+        aluno_dict = {
+            "id": a.id,
+            "turma_id": a.turma_id,
+            "nome": a.nome,
+            "empresa": a.empresa,
+            "ra": a.ra,
+            "chamada": a.chamada,
+            "ativo": a.ativo,
+            "criado_em": a.criado_em,
+            "atualizado_em": a.atualizado_em,
+            "turma": a.turma.nome_turma if a.turma else None,
+            "cod_turma": a.turma.cod_turma if a.turma else None
+        }
+        resultado.append(aluno_dict)
+    
+    return resultado
 
 
 def buscar(db: Session, aluno_id: int) -> Aluno:
@@ -68,3 +90,58 @@ def desativar(db: Session, aluno_id: int) -> None:
     except Exception:
         db.rollback()
         raise
+
+def importar_lote(db: Session, dados: list[AlunoImport]):
+    total = len(dados)
+    sucesso = 0
+    erro = 0
+    detalhes = []
+
+    for item in dados:
+        try:
+            # 1. Buscar ou criar turma
+            turma = db.query(Turma).filter(Turma.cod_turma == item.cod_turma).first()
+            if not turma:
+                turma = Turma(
+                    cod_turma=item.cod_turma,
+                    nome_turma=item.turma,
+                    termo=item.termo or 1
+                )
+                db.add(turma)
+                db.flush()
+            
+            # 2. Verificar se aluno já existe na turma (por nome)
+            aluno = db.query(Aluno).filter(
+                Aluno.nome == item.nome,
+                Aluno.turma_id == turma.id
+            ).first()
+
+            if not aluno:
+                aluno = Aluno(
+                    nome=item.nome,
+                    turma_id=turma.id,
+                    chamada=item.chamada,
+                    ativo=True
+                )
+                db.add(aluno)
+                sucesso += 1
+                detalhes.append({"nome": item.nome, "status": "sucesso", "mensagem": "Criado"})
+            else:
+                aluno.chamada = item.chamada
+                aluno.ativo = True
+                sucesso += 1
+                detalhes.append({"nome": item.nome, "status": "sucesso", "mensagem": "Atualizado"})
+            
+        except Exception as e:
+            erro += 1
+            detalhes.append({"nome": item.nome, "status": "erro", "mensagem": str(e)})
+            db.rollback()
+            continue
+
+    db.commit()
+    return {
+        "total": total,
+        "sucesso": sucesso,
+        "erro": erro,
+        "detalhes": detalhes
+    }

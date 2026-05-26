@@ -20,6 +20,7 @@ export interface ChamadaItem {
   id: number | null;
   nome_aluno: string;
   cod_turma: string;
+  chamada?: number | null;
   data_aula: string;
   disciplina: string;
   presente: boolean;
@@ -89,6 +90,9 @@ export const chamadas = {
 
   listarPorTurma: (turma: string, data = ''): Promise<ChamadaItem[]> =>
     apiFetch(`/chamadas/relatorio?turma=${encodeURIComponent(turma)}&data=${encodeURIComponent(data)}`),
+
+  listarPorEmpresa: (empresa: string, data = ''): Promise<ChamadaItem[]> =>
+    apiFetch(`/chamadas/relatorio?empresa=${encodeURIComponent(empresa)}&data=${encodeURIComponent(data)}`),
 
   atualizar: (id: number, presente: boolean) =>
     apiFetch(`/chamadas/${id}`, { method: 'PATCH', body: JSON.stringify({ presente }) })
