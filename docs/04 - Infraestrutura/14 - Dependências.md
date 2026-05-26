@@ -6,27 +6,49 @@
 
 ---
 
-## Backend — `requirements.txt`
+## Backend — `backend-python/requirements.txt`
 
 ```
-fastapi==0.115.0
-uvicorn[standard]==0.30.0
-Office365-REST-Python-Client==2.6.2
-httpx==0.27.0
-python-jose[cryptography]==3.3.0
-pydantic==2.8.0
-pydantic-settings==2.4.0
-python-dotenv==1.0.1
-pytest==8.3.0
-pytest-asyncio==0.24.0
+fastapi
+uvicorn[standard]
+sqlalchemy
+pymssql
+python-dotenv
 ```
 
 ### Instalação
 
 ```bash
-cd backend
+# 1. dependência de sistema (FreeTDS para pymssql)
+sudo pacman -S freetds       # Arch / CachyOS
+# ou: sudo apt install freetds-dev
+
+# 2. dependências Python
+cd backend-python
 pip install -r requirements.txt
 ```
+
+### Rodar o servidor
+
+```bash
+cd backend-python
+uvicorn app.main:app --reload
+# acesse http://localhost:8000/docs
+```
+
+---
+
+## Por que `pymssql` em vez de `pyodbc`?
+
+| | `pyodbc` | `pymssql` |
+|---|---|---|
+| Dependência de sistema | `unixodbc` + `msodbcsql18` (AUR) | `freetds` (pacman) |
+| Instalação no Linux | Complexa (driver Microsoft via AUR) | Simples (`pacman`) |
+| Licença adicional | Sim (Microsoft EULA) | Não |
+| Suporte Azure SQL | Sim | Sim |
+
+> `pyodbc` continua listado como alternativa se o ODBC Driver 18 for instalado. O formato da URL muda:
+> `mssql+pyodbc://...?driver=ODBC+Driver+18+for+SQL+Server`
 
 ---
 
@@ -55,6 +77,5 @@ npm create svelte@latest .
 ## Links relacionados
 
 - [[02 - Stack e Decisões Técnicas]] — por que cada lib foi escolhida
-- [[06 - Autenticação]] — `Office365-REST-Python-Client` e `python-jose`
+- [[13 - Variáveis de Ambiente]] — configuração do `DATABASE_URL`
 - [[10 - Import de Excel]] — pacote `xlsx`
-- [[15 - Próximos Passos]] — migração futura para `msgraph-sdk`

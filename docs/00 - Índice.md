@@ -7,8 +7,8 @@ tags:
 
 # Sistema de Chamada — Índice
 
-Projeto de controle de presença integrado ao SharePoint do **SENAI Limeira**.
-Stack: `Python/FastAPI` + `SvelteKit` + `Microsoft 365`
+Projeto de controle de presença para o **SENAI Limeira**.
+Stack: `Python/FastAPI` + `SQLAlchemy` + `Azure SQL Database` + `SvelteKit`
 
 ---
 
@@ -25,9 +25,9 @@ Stack: `Python/FastAPI` + `SvelteKit` + `Microsoft 365`
 
 | Nota | Conteúdo |
 | --- | --- |
-| [[05 - SharePoint - Listas]] | Colunas e tipos das listas |
+| [[05 - Schema Azure SQL]] | Tabelas, colunas e relacionamentos do banco |
 | [[06 - Autenticação]] | Modos de auth e implementação |
-| [[07 - Backend FastAPI]] | Config, services, endpoints |
+| [[07 - Backend FastAPI]] | Models, schemas, services, endpoints |
 
 ## 📁 03 - Frontend
 
@@ -59,11 +59,13 @@ Stack: `Python/FastAPI` + `SvelteKit` + `Microsoft 365`
 | Etapa | Status |
 | --- | --- |
 | Definição de stack | ✅ Concluído |
-| Estrutura de pastas | ✅ Script .bat criado |
-| Conexão com SharePoint | ✅ Testada e funcionando |
-| Colunas das listas mapeadas | ✅ Concluído |
+| Schema Azure SQL definido | ✅ Concluído |
+| Conexão Azure SQL testada | ✅ Funcionando (pymssql + FreeTDS) |
+| Models SQLAlchemy ORM | ✅ Concluído |
+| Schemas Pydantic v2 | ✅ Concluído |
 | Services com CRUD | ✅ Concluído |
-| Routers FastAPI | 🔄 Em andamento |
+| Routers FastAPI (7) | ✅ Concluído |
+| Fluxo completo de chamada | ✅ Implementado |
 | Frontend SvelteKit | ⏳ Pendente |
 | Autenticação MSAL | ⏳ Pendente (aguarda App Registration) |
 | Import Excel | ⏳ Pendente |
