@@ -89,6 +89,10 @@
 		return `${dia}/${mes}/${ano}`;
 	}
 
+	function exportarPDF() {
+		window.print();
+	}
+
 	async function exportarExcelComCores() {
 		const workbook = new ExcelJS.Workbook();
 		const worksheet = workbook.addWorksheet('Relatório Empresa');
@@ -176,7 +180,7 @@
 		<h1 class="text-2xl font-bold text-gray-800">Relatório de Presença</h1>
 		<div class="flex gap-3">
 			<button
-				onclick={() => window.print()}
+				onclick={exportarPDF}
 				class="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-xl border border-red-600 bg-white px-4 font-medium text-red-600 shadow-sm transition-colors hover:bg-red-600 hover:text-white"
 			>
 				<svg
@@ -252,8 +256,26 @@
 	</div>
 
 	<!-- Tabela de Frequência -->
-	<div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-		<div class="flex items-center justify-between border-b border-gray-100 p-6">
+	<div
+		id="print-area"
+		class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm print:border-none print:shadow-none"
+	>
+		<!-- Cabeçalho visível apenas no print -->
+		<div class="mb-4 hidden rounded-t-lg bg-red-700 px-4 py-5 text-center text-white print:block">
+			<h1 class="m-0 text-2xl font-bold tracking-wider">SENAI - RELATÓRIO DE PRESENÇA</h1>
+			<p class="m-0 mt-1 text-xs opacity-90">{companyName}</p>
+		</div>
+		<div class="mb-4 hidden border-b-2 border-gray-200 px-2 pb-3 text-xs text-gray-700 print:block">
+			<div class="grid grid-cols-2 gap-2">
+				<p><span class="font-bold text-gray-500">Empresa:</span> {companyName}</p>
+				<p>
+					<span class="font-bold text-gray-500">Período:</span>
+					{formatarDataBR(datainicio)} até {formatarDataBR(datafim)}
+				</p>
+			</div>
+		</div>
+
+		<div class="flex items-center justify-between border-b border-gray-100 p-6 print:hidden">
 			<h3 class="font-bold text-gray-700">Frequência Diária</h3>
 			<span class="text-xs text-gray-400">{alunosUnicos.length} alunos vinculados</span>
 		</div>
@@ -353,16 +375,40 @@
 
 <style>
 	@media print {
-		header,
-		.print\:hidden {
-			display: none !important;
+		:global(body *),
+		:global(html *) {
+			visibility: hidden !important;
 		}
-		main {
+
+		#print-area,
+		#print-area * {
+			visibility: visible !important;
+		}
+
+		#print-area {
+			position: absolute !important;
+			left: 0 !important;
+			top: 0 !important;
+			width: 100% !important;
+			margin: 0 !important;
 			padding: 0 !important;
 		}
-		.bg-white {
-			border: none !important;
-			box-shadow: none !important;
+
+		:global(main) {
+			padding: 0 !important;
+			margin: 0 !important;
+			background: white !important;
+		}
+
+		@page {
+			size: A4 landscape;
+			margin: 8mm 10mm;
+		}
+
+		:global(body) {
+			-webkit-print-color-adjust: exact !important;
+			print-color-adjust: exact !important;
+			background-color: white !important;
 		}
 	}
 </style>
