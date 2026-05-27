@@ -1,5 +1,7 @@
 <div align="center">
+
 <img src=".github/senai-seeklogo.svg" width="200"/>
+
 <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=32&pause=1000&color=DC2626&center=true&vCenter=true&width=600&lines=Sistema+de+Chamada+SENAI;Controle+de+Presen%C3%A7a+Inteligente;Powered+by+Azure+%2B+IA" alt="Typing SVG" />
 
 <br/>
@@ -36,6 +38,7 @@ Confirma a chamada                →   Dados salvos no Azure SQL
                                   →   Microsoft Teams recebe notificação instantânea
                                   →   IA gera resumo inteligente da aula
                                   →   Alunos em risco são destacados automaticamente
+                                  →   Relatório semanal enviado por email automaticamente
 ```
 
 ---
@@ -70,6 +73,7 @@ Confirma a chamada                →   Dados salvos no Azure SQL
 - ✅ Resumo automático de cada chamada via **Gemini AI**
 - ✅ Alerta de alunos abaixo de 75% de frequência
 - ✅ Análise narrativa enviada direto no Teams
+- ✅ Relatório semanal de frequência por **email automático**
 
 </td>
 <td width="50%">
@@ -106,7 +110,8 @@ Confirma a chamada                →   Dados salvos no Azure SQL
 │   9 tabelas          │   │  🤖 Gemini AI (resumos)     │
 │   Índices otimizados │   │  💬 Microsoft Teams         │
 │   Soft delete        │   │     (Adaptive Cards)        │
-└─────────────────────┘   └─────────────────────────────┘
+└─────────────────────┘   │  📧 Gmail SMTP (relatórios) │
+                           └─────────────────────────────┘
 ```
 
 ---
@@ -120,7 +125,8 @@ senai-lista-chamada/
 │   │   ├── models/             # SQLAlchemy ORM (9 tabelas)
 │   │   ├── schemas/            # Pydantic v2
 │   │   ├── services/           # Lógica de negócio
-│   │   │   └── teams_service.py   # 🤖 IA + Teams Webhook
+│   │   │   ├── teams_service.py   # 🤖 IA + Teams Webhook
+│   │   │   └── email_service.py   # 📧 Relatório semanal por email
 │   │   ├── routers/            # Endpoints REST
 │   │   ├── seed.py             # Dados de demonstração
 │   │   └── main.py
@@ -165,7 +171,7 @@ pip install -r requirements.txt
 
 # Configurar variáveis de ambiente
 cp .env.example .env
-# Editar .env com suas credenciais Azure
+# Editar .env com suas credenciais
 
 # Popular banco com dados de demonstração
 python -m app.seed
@@ -207,6 +213,10 @@ TEAMS_WEBHOOK_URL=https://outlook.office.com/webhook/...
 
 # Gemini AI
 GEMINI_API_KEY=sua-chave-aqui
+
+# Email (Gmail com senha de app)
+EMAIL_USER=seuemail@gmail.com
+EMAIL_PASSWORD=sua-senha-de-app
 ```
 
 ---
@@ -220,6 +230,7 @@ GEMINI_API_KEY=sua-chave-aqui
 | `GET` | `/sessoes/{id}/alunos` | Alunos da sessão |
 | `POST` | `/chamadas/lote` | Registrar chamada completa |
 | `GET` | `/chamadas/sessao/{id}` | Ver chamada registrada |
+| `POST` | `/chamadas/relatorio-semanal` | Enviar relatório por email |
 | `GET` | `/turmas` | Listar turmas |
 | `GET` | `/alunos` | Listar alunos |
 | `GET` | `/docs` | Documentação interativa Swagger |
@@ -243,13 +254,30 @@ cursos ───────┤         │
 ---
 
 ## 💬 Notificação no Microsoft Teams
+
 ![Teams](.github/teams-notif.png)<br>
+
 Quando uma chamada é registrada, o sistema envia automaticamente um **Adaptive Card** no Teams com:
 
 - 📊 Resumo da aula (turma, disciplina, data)
 - 👥 Estatísticas de presença com indicadores visuais
 - ⚠️ Lista de alunos abaixo de 75% de frequência
 - 🤖 Análise narrativa gerada por IA
+
+---
+
+## 📧 Relatório Semanal por Email
+
+![Email](.github/email-notif.png)<br>
+
+Todo final de semana o sistema envia automaticamente um **relatório HTML** para cada professor com:
+
+- 📊 Frequência geral da turma na semana
+- 👥 Tabela detalhada por aluno com % colorida (verde ≥75%, vermelho <75%)
+- ⚠️ Lista de alunos abaixo de 75% destacados em vermelho
+- 🤖 Análise narrativa gerada por IA
+
+> O envio também pode ser disparado manualmente via `POST /chamadas/relatorio-semanal`.
 
 ---
 
@@ -262,6 +290,7 @@ Quando uma chamada é registrada, o sistema envia automaticamente um **Adaptive 
 - [x] Import de planilha Excel
 - [x] Microsoft Teams Webhook + Adaptive Cards
 - [x] Análise IA com Gemini
+- [x] Relatório semanal por email com resumo IA
 - [ ] QR Code de chamada
 - [ ] PWA instalável
 - [ ] Azure AD SSO
@@ -287,5 +316,6 @@ Stack escolhida para máxima integração com o ecossistema Microsoft já utiliz
 ![Azure](https://img.shields.io/badge/Azure-0078D4?style=flat-square&logo=microsoftazure&logoColor=white)
 ![Google Gemini](https://img.shields.io/badge/Gemini_AI-4285F4?style=flat-square&logo=google&logoColor=white)
 ![Microsoft Teams](https://img.shields.io/badge/Teams-6264A7?style=flat-square&logo=microsoftteams&logoColor=white)
+![Gmail](https://img.shields.io/badge/Gmail-EA4335?style=flat-square&logo=gmail&logoColor=white)
 
 </div>
