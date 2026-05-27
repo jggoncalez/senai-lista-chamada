@@ -115,13 +115,25 @@ def registrar_lote(
             ).first()
             if not aluno:
                 continue
-            total_sessoes = db.query(PresencaAluno).filter(
-                PresencaAluno.aluno_id == item.aluno_id
-            ).count()
-            total_presentes = db.query(PresencaAluno).filter(
-                PresencaAluno.aluno_id == item.aluno_id,
-                PresencaAluno.presente == True
-            ).count()
+            total_sessoes = (
+                db.query(PresencaAluno)
+                .join(SessaoAula, PresencaAluno.sessao_id == SessaoAula.id)
+                .filter(
+                    PresencaAluno.aluno_id == item.aluno_id,
+                    SessaoAula.turma_disciplina_id == sessao.turma_disciplina_id,
+                )
+                .count()
+            )
+            total_presentes = (
+                db.query(PresencaAluno)
+                .join(SessaoAula, PresencaAluno.sessao_id == SessaoAula.id)
+                .filter(
+                    PresencaAluno.aluno_id == item.aluno_id,
+                    SessaoAula.turma_disciplina_id == sessao.turma_disciplina_id,
+                    PresencaAluno.presente == True,
+                )
+                .count()
+            )
             if total_sessoes > 0:
                 pct = (total_presentes / total_sessoes) * 100
                 if pct < 75:
