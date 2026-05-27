@@ -3,7 +3,12 @@ from fastapi import HTTPException
 
 from app.models.presenca import PresencaAluno
 from app.models.sessao_aula import SessaoAula
+from app.models.aluno import Aluno
 from app.schemas.presenca import PresencaCreate, PresencaUpdate, ChamadaLoteItem
+from app.models.turma import Turma
+from app.models.curso import Curso
+from app.models.turma_disciplina import TurmaDisciplina
+from app.services.teams_service import notificar_chamada
 
 
 def buscar(db: Session, presenca_id: int) -> PresencaAluno:
@@ -68,13 +73,93 @@ def registrar_lote(
                 )
                 db.add(presenca)
                 resultado.append(presenca)
+
+        # busca ANTES do commit enquanto sessão ainda tá aberta
+        sessao = db.query(SessaoAula).filter(
+            SessaoAula.id == sessao_id
+        ).first()
+        if not sessao:
+            raise ValueError("Sessão não encontrada")
+
+        td = db.query(TurmaDisciplina).filter(
+            TurmaDisciplina.id == sessao.turma_disciplina_id
+        ).first()
+        if not td:
+            raise ValueError("Turma disciplina não encontrada")
+
+        turma = db.query(Turma).filter(
+            Turma.id == td.turma_id
+        ).first()
+        curso = db.query(Curso).filter(
+            Curso.id == td.curso_id
+        ).first()
+
         db.commit()
+
         for p in resultado:
             db.refresh(p)
-        return resultado
+
     except Exception:
         db.rollback()
         raise
+
+    # notificação FORA do try principal — nunca bloqueia o salvamento
+    try:
+        total = len(items)
+        presentes_count = sum(1 for i in items if i.presente)
+
+        alunos_risco = []
+        for item in items:
+            aluno = db.query(Aluno).filter(
+                Aluno.id == item.aluno_id
+            ).first()
+            if not aluno:
+                continue
+            total_sessoes = (
+                db.query(PresencaAluno)
+                .join(SessaoAula, PresencaAluno.sessao_id == SessaoAula.id)
+                .filter(
+                    PresencaAluno.aluno_id == item.aluno_id,
+                    SessaoAula.turma_disciplina_id == sessao.turma_disciplina_id,
+                )
+                .count()
+            )
+            total_presentes = (
+                db.query(PresencaAluno)
+                .join(SessaoAula, PresencaAluno.sessao_id == SessaoAula.id)
+                .filter(
+                    PresencaAluno.aluno_id == item.aluno_id,
+                    SessaoAula.turma_disciplina_id == sessao.turma_disciplina_id,
+                    PresencaAluno.presente == True,
+                )
+                .count()
+            )
+            if total_sessoes > 0:
+                pct = (total_presentes / total_sessoes) * 100
+                if pct < 75:
+                    alunos_risco.append({
+                        "nome": aluno.nome,
+                        "pct": pct
+                    })
+
+        import threading
+
+        threading.Thread(
+            target=notificar_chamada,
+            kwargs={
+                "turma": str(turma.cod_turma) if turma else "?",
+                "disciplina": str(curso.nome) if curso else "?",
+                "data": str(sessao.data_aula),
+                "total": total,
+                "presentes": presentes_count,
+                "alunos_risco": alunos_risco,
+            },
+            daemon=True,
+        ).start()
+    except Exception:
+        pass
+
+    return resultado
 
 
 def atualizar(db: Session, presenca_id: int, dados: PresencaUpdate) -> PresencaAluno:
