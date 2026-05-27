@@ -130,14 +130,20 @@ def registrar_lote(
                         "pct": pct
                     })
 
-        notificar_chamada(
-            turma=str(turma.cod_turma) if turma else "?",
-            disciplina=str(curso.nome) if curso else "?",
-            data=str(sessao.data_aula),
-            total=total,
-            presentes=presentes_count,
-            alunos_risco=alunos_risco
-        )
+        import threading
+
+        threading.Thread(
+            target=notificar_chamada,
+            kwargs={
+                "turma": str(turma.cod_turma) if turma else "?",
+                "disciplina": str(curso.nome) if curso else "?",
+                "data": str(sessao.data_aula),
+                "total": total,
+                "presentes": presentes_count,
+                "alunos_risco": alunos_risco,
+            },
+            daemon=True,
+        ).start()
     except Exception:
         pass
 
