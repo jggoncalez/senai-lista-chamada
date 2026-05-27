@@ -1,14 +1,21 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  
-  let cnpj = $state('');
+  import { onMount } from 'svelte';
+  import { empresas as empresasApi } from '$lib/api';
+
+  let empresasList = $state<string[]>([]);
+  let empresaSelecionada = $state('');
   let password = $state('');
   let error = $state('');
 
+  onMount(async () => {
+    empresasList = await empresasApi.listar();
+  });
+
   function handleLogin() {
-    if (cnpj && password) {
+    if (empresaSelecionada && password) {
       localStorage.setItem('company_logged_in', 'true');
-      localStorage.setItem('company_name', 'Empresa Exemplo S/A');
+      localStorage.setItem('company_name', empresaSelecionada);
       goto('/dashboard-empresa');
     } else {
       error = 'Por favor, preencha todos os campos.';
@@ -25,26 +32,27 @@
       <p class="text-gray-500">Controle de Frequência de Alunos</p>
     </div>
 
-    <form class="w-full flex flex-col gap-4" onsubmit={(e) => { e.preventDefault(); handleLogin(); }}>
+    <div class="w-full flex flex-col gap-4">
       <div class="flex flex-col gap-1">
-        <label for="cnpj" class="text-sm font-semibold text-gray-600">CNPJ</label>
-        <input 
-          type="text" 
-          id="cnpj"
-          bind:value={cnpj}
-          placeholder="00.000.000/0000-00"
-          class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        <label class="text-sm font-semibold text-gray-600">Empresa</label>
+        <select
+          bind:value={empresaSelecionada}
+          class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 bg-white"
         >
+          <option value="">Selecione sua empresa...</option>
+          {#each empresasList as emp}
+            <option value={emp}>{emp}</option>
+          {/each}
+        </select>
       </div>
 
       <div class="flex flex-col gap-1">
-        <label for="password" class="text-sm font-semibold text-gray-600">Senha</label>
-        <input 
-          type="password" 
-          id="password"
+        <label class="text-sm font-semibold text-gray-600">Senha</label>
+        <input
+          type="password"
           bind:value={password}
           placeholder="••••••••"
-          class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500"
         >
       </div>
 
@@ -52,8 +60,8 @@
         <p class="text-red-500 text-sm font-medium">{error}</p>
       {/if}
 
-      <button 
-        type="submit"
+      <button
+        onclick={handleLogin}
         class="w-full bg-red-600 text-white font-bold py-3 rounded-lg hover:bg-red-700 transition-colors shadow-md"
       >
         Entrar
@@ -62,7 +70,6 @@
       <a href="/selecao" class="text-center text-sm text-gray-500 hover:text-gray-700 underline">
         Voltar para seleção
       </a>
-    </form>
-
+    </div>
   </div>
 </div>

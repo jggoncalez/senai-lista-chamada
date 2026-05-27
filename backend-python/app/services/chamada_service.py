@@ -191,3 +191,56 @@ def _verificar_sessao(db: Session, sessao_id: int) -> None:
     sessao = db.query(SessaoAula).filter(SessaoAula.id == sessao_id).first()
     if not sessao:
         raise HTTPException(status_code=404, detail="Sessão de aula não encontrada")
+
+def relatorio(
+    db: Session,
+    turma: str | None = None,
+    empresa: str | None = None,
+    data: str | None = None,
+    data_inicio: str | None = None,
+    data_fim: str | None = None,
+) -> list[dict]:
+    from app.models.turma import Turma
+    from app.models.curso import Curso
+    from app.models.turma_disciplina import TurmaDisciplina
+
+    q = (
+        db.query(
+            PresencaAluno,
+            Aluno.nome.label("nome_aluno"),
+            Turma.cod_turma,
+            SessaoAula.data_aula,
+            Curso.nome.label("disciplina"),
+        )
+        .join(Aluno, PresencaAluno.aluno_id == Aluno.id)
+        .join(SessaoAula, PresencaAluno.sessao_id == SessaoAula.id)
+        .join(TurmaDisciplina, SessaoAula.turma_disciplina_id == TurmaDisciplina.id)
+        .join(Turma, TurmaDisciplina.turma_id == Turma.id)
+        .join(Curso, TurmaDisciplina.curso_id == Curso.id)
+    )
+
+    if turma:
+        q = q.filter(Turma.cod_turma == turma)
+    if empresa:
+        q = q.filter(Aluno.empresa == empresa)
+    if data:
+        q = q.filter(SessaoAula.data_aula == data)
+    if data_inicio:
+        q = q.filter(SessaoAula.data_aula >= data_inicio)
+    if data_fim:
+        q = q.filter(SessaoAula.data_aula <= data_fim)
+
+    rows = q.all()
+
+    return [
+        {
+            "id": r.PresencaAluno.id,
+            "nome_aluno": r.nome_aluno,
+            "cod_turma": r.cod_turma,
+            "chamada": None,          # ← sem a coluna no banco por ora
+            "data_aula": r.data_aula,
+            "disciplina": r.disciplina,
+            "presente": r.PresencaAluno.presente,
+        }
+        for r in rows
+    ]

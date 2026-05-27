@@ -39,3 +39,13 @@ def enviar_relatorio_semanal_manual(db: Session = Depends(get_db)):
     from app.services.email_service import enviar_relatorio_semanal
     enviar_relatorio_semanal(db)
     return {"status": "ok", "mensagem": "Relatórios enviados com sucesso"}
+@router.get("/relatorio", response_model=list[ChamadaRelatorioResponse])
+def relatorio(
+    turma: Optional[str] = None,
+    empresa: Optional[str] = None,
+    data: Optional[str] = None,
+    data_inicio: Optional[str] = None,
+    data_fim: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    return chamada_service.relatorio(db, turma, empresa, data, data_inicio, data_fim)

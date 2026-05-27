@@ -38,7 +38,7 @@ class ChamadaLoteCreate(BaseModel):
 class ChamadaRelatorioResponse(BaseModel):
     id: Optional[int] = None
     nome_aluno: str
-    cod_turma: str
+    cod_turma: Optional[str] = None   # ← era obrigatório, pode vir None em edge cases
     chamada: Optional[int] = None
     data_aula: date
     disciplina: str

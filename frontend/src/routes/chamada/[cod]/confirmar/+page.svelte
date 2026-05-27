@@ -1,48 +1,61 @@
-<script>
-    import { page } from '$app/state';
-    import { goto } from '$app/navigation';
-    import CardConfirm from '$lib/components/CardConfirm.svelte';
-    import { chamadas as chamadasApi } from '$lib/api';
+<script lang="ts">
+	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
+	import CardConfirm from '$lib/components/CardConfirm.svelte';
+	import { chamadas as chamadasApi, sessoes as sessoesApi } from '$lib/api';
 
-    // 1. Buscamos do page.state (onde o goto salvou) e não do page.data
-    // Usamos valores padrão (??) para evitar que o componente quebre se estiver vazio
-    /** @type {any} */
-    const pageState = page.state;
-    let nomeTurma = $derived(pageState.nomeTurma ?? 'Não informada');
-    let dataAula = $derived(pageState.dataAula ?? '');
-    let disciplinaSelecionada = $derived(pageState.disciplinaSelecionada ?? 'Não informada');
-    let presencaMap = $derived(pageState.presencaMap ?? {});
-    let listaAlunos = $derived(pageState.listaAlunos ?? []);
-    
-    // 2. Total de alunos baseado na lista que veio do state
-    let totalAlunos = $derived(listaAlunos.length);
-    // Conta quantos alunos têm valor 'true' no mapa de presença
-    let totalPresentes = $derived(
-        Object.values(presencaMap).filter(p => p === true).length
-    );
-    // 3. O nome do professor geralmente vem do Layout (page.data)
-    let nomeProfessor = $derived(page.data.user?.nome || 'Visitante');
-    
-    let cod = page.params.cod ?? '3DEVT';
+	/** @type {any} */
+	const pageState = page.state;
+	let nomeTurma = $derived(pageState.nomeTurma ?? 'Não informada');
+	let dataAula = $derived(pageState.dataAula ?? '');
+	let disciplinaId = $derived(pageState.disciplinaId ?? null); // turma_disciplina_id
+	let disciplinaNome = $derived(pageState.disciplinaNome ?? '');
+	let presencaMap = $derived(pageState.presencaMap ?? {}); // { aluno_id: boolean }
+	let listaAlunos = $derived(pageState.listaAlunos ?? []);
+	let professorId = $derived(pageState.professorId ?? null);
+	let totalAlunos = $derived(listaAlunos.length);
+	let totalPresentes = $derived(Object.values(presencaMap).filter((p) => p === true).length);
 
-    async function salvarChamada() {
-        // Agora usamos a listaAlunos que veio do state
-        for (const aluno of listaAlunos) {
-            await chamadasApi.registrar({
-                nome_aluno: aluno.nome,
-                cod_turma: cod,
-                data_aula: dataAula,
-                disciplina: disciplinaSelecionada,
-                presente: presencaMap[aluno.nome] ?? true
-            });
-        }
-        goto('/'); 
-    }
+	let cod = page.params.cod ?? '';
+	let salvando = $state(false);
+	let erroSalvar = $state('');
+
+	async function salvarChamada() {
+		if (!disciplinaId) {
+			erroSalvar = 'Disciplina não informada.';
+			return;
+		}
+		try {
+			salvando = true;
+			erroSalvar = '';
+
+			// 1. Cria ou busca a sessão do dia
+			const sessao = await sessoesApi.criarOuBuscar({
+				turma_disciplina_id: disciplinaId,
+				professor_id: professorId, // ← adicione esta linha
+				data_aula: dataAula
+			});
+
+			// 2. Monta lista de presenças usando ID numérico do aluno
+			const presencas = listaAlunos.map((aluno: any) => ({
+				aluno_id: aluno.id,
+				presente: presencaMap[aluno.id] ?? true
+			}));
+
+			// 3. Salva lote
+			await chamadasApi.salvarLote(sessao.id, presencas);
+
+			goto('/');
+		} catch (e: any) {
+			erroSalvar = e.message ?? 'Erro ao salvar chamada.';
+		} finally {
+			salvando = false;
+		}
+	}
 </script>
 
-<!-- Breadcrumb -->
 <nav class="mb-6 flex items-center gap-2 text-sm text-gray-500">
-	<a href="/dashboard" class="text-red-600 hover:underline">Dashboard</a>
+	<a href="/" class="text-red-600 hover:underline">Dashboard</a>
 	<span>›</span>
 	<span class="text-gray-700">{cod}</span>
 	<span>›</span>
@@ -51,31 +64,39 @@
 	<span class="text-red-600">Confirmar</span>
 </nav>
 
+<div class="flex w-full flex-1 flex-col items-center justify-center gap-3 p-5">
+	<h1 class="text-2xl font-bold">Confirmar Chamada</h1>
 
-<div class="flex w-full flex-1 items-center justify-center p-5 flex-col gap-3">
-<h1 class="text-2xl font-bold">Confirmar Chamada</h1>
 	<CardConfirm
-        nomeTurma={nomeTurma}
-        data={dataAula}
-        diciplina={disciplinaSelecionada}
-        professor={nomeProfessor}
-        presentes={totalPresentes}
-        totalAlunos={totalAlunos}
-    />
-      <!-- Botões com mesma largura do card -->
-    <div class="flex w-full max-w-2xl items-center justify-between">
-        <a 
-            href="/chamada/{cod}"
-            class="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 transition-colors"
-        >
-            ‹ Voltar e Corrigir
-        </a>
-        <button
-            onclick={salvarChamada}
-            class="bg-red-600 hover:bg-red-700 text-white font-medium px-6 py-2.5 rounded-xl transition-colors"
-        >
-            Salvar Chamada
-    </button>
-    </div>
-    
+		{nomeTurma}
+		data={dataAula}
+		diciplina={disciplinaNome}
+		professor="Professor"
+		presentes={totalPresentes}
+		{totalAlunos}
+	/>
+
+	{#if erroSalvar}
+		<div
+			class="w-full max-w-2xl rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+		>
+			{erroSalvar}
+		</div>
+	{/if}
+
+	<div class="flex w-full max-w-2xl items-center justify-between">
+		<a
+			href="/chamada/{cod}"
+			class="flex items-center gap-2 text-sm text-gray-500 transition-colors hover:text-gray-800"
+		>
+			‹ Voltar e Corrigir
+		</a>
+		<button
+			onclick={salvarChamada}
+			disabled={salvando}
+			class="rounded-xl bg-red-600 px-6 py-2.5 font-medium text-white transition-colors hover:bg-red-700 disabled:bg-gray-300"
+		>
+			{salvando ? 'Salvando...' : 'Confirmar Chamada'}
+		</button>
+	</div>
 </div>

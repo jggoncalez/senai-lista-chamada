@@ -8,7 +8,9 @@
 	const { saveAs } = fileSaverPkg;
 
 	let companyName = $state('');
-	let datainicio = $state(new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0]);
+	let datainicio = $state(
+		new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0]
+	);
 	let datafim = $state(new Date().toISOString().split('T')[0]);
 	let disciplinaSelecionada = $state('todas');
 	let chamadaEmpresa = $state<ChamadaItem[]>([]);
@@ -17,28 +19,20 @@
 	onMount(async () => {
 		const loggedIn = localStorage.getItem('company_logged_in');
 		if (!loggedIn) {
-			// Para propósitos de desenvolvimento, se não estiver logado, pegamos um mock
-			companyName = 'Empresa Exemplo';
-		} else {
-			companyName = localStorage.getItem('company_name') || 'Empresa';
+			goto('/login-empresa');
+			return;
 		}
+		companyName = localStorage.getItem('company_name') || '';
 		await carregarDados();
 	});
 
 	async function carregarDados() {
 		try {
 			carregando = true;
-			// Chamada para o novo endpoint de empresa
-			chamadaEmpresa = await chamadasApi.listarPorEmpresa(companyName);
+			chamadaEmpresa = await chamadasApi.listarPorEmpresa(companyName, datainicio, datafim);
 		} catch (e) {
-			console.error('Erro ao carregar dados da empresa:', e);
-			// Fallback mock para visualização se o backend estiver fora
-			chamadaEmpresa = [
-				{ id: 1, nome_aluno: 'João Silva', cod_turma: 'MEC-2024', disciplina: 'Mecânica Aplicada', data_aula: '2024-05-20', presente: true, chamada: 1 },
-				{ id: 2, nome_aluno: 'João Silva', cod_turma: 'MEC-2024', disciplina: 'Mecânica Aplicada', data_aula: '2024-05-21', presente: false, chamada: 1 },
-				{ id: 3, nome_aluno: 'Maria Oliveira', cod_turma: 'MEC-2024', disciplina: 'Mecânica Aplicada', data_aula: '2024-05-20', presente: true, chamada: 2 },
-				{ id: 4, nome_aluno: 'Maria Oliveira', cod_turma: 'MEC-2024', disciplina: 'Matemática', data_aula: '2024-05-22', presente: true, chamada: 2 },
-			];
+			console.error('Erro ao carregar dados:', e);
+			chamadaEmpresa = [];
 		} finally {
 			carregando = false;
 		}
@@ -50,9 +44,7 @@
 		chamadaEmpresa.filter((c) => {
 			const dataAula = c.data_aula.slice(0, 10);
 			const dataOk = dataAula >= datainicio && dataAula <= datafim;
-			const discOk =
-				disciplinaSelecionada === 'todas' ||
-				c.disciplina === disciplinaSelecionada;
+			const discOk = disciplinaSelecionada === 'todas' || c.disciplina === disciplinaSelecionada;
 			return dataOk && discOk;
 		})
 	);
@@ -61,15 +53,15 @@
 	let datas = $derived([...new Set(alunosFiltrados.map((c) => c.data_aula.slice(0, 10)))].sort());
 
 	let alunoInfoMap = $derived(
-		alunosFiltrados.reduce((acc, c) => {
-			if (!acc[c.nome_aluno]) {
-				acc[c.nome_aluno] = { 
-					chamada: c.chamada,
-					turma: c.cod_turma
-				};
-			}
-			return acc;
-		}, {} as Record<string, { chamada?: number | null, turma: string }>)
+		alunosFiltrados.reduce(
+			(acc, c) => {
+				if (!acc[c.nome_aluno]) {
+					acc[c.nome_aluno] = { chamada: c.chamada, turma: c.cod_turma };
+				}
+				return acc;
+			},
+			{} as Record<string, { chamada?: number | null; turma: string }>
+		)
 	);
 
 	function getPresenca(nomeAluno: string, data: string): boolean | null {
@@ -86,7 +78,9 @@
 	}
 
 	function getFaltasPorDisciplina(nomeAluno: string, disc: string): number {
-		return chamadaEmpresa.filter(c => c.nome_aluno === nomeAluno && c.disciplina === disc && !c.presente).length;
+		return chamadaEmpresa.filter(
+			(c) => c.nome_aluno === nomeAluno && c.disciplina === disc && !c.presente
+		).length;
 	}
 
 	function formatarDataBR(dataUS: string) {
@@ -95,37 +89,81 @@
 		return `${dia}/${mes}/${ano}`;
 	}
 
-	function handleLogout() {
-		localStorage.removeItem('company_logged_in');
-		localStorage.removeItem('company_name');
-		goto('/selecao');
-	}
-
-	async function exportarExcel() {
+	async function exportarExcelComCores() {
 		const workbook = new ExcelJS.Workbook();
 		const worksheet = workbook.addWorksheet('Relatório Empresa');
 
-		worksheet.addRow(['Relatório de Frequência - ' + companyName]);
+		worksheet.mergeCells(`A1:${String.fromCharCode(64 + 2 + datas.length + 1)}2`);
+		const titleCell = worksheet.getCell('A1');
+		titleCell.value = `SENAI - RELATÓRIO DE FREQUÊNCIA — ${companyName}`;
+		titleCell.font = { name: 'Arial', size: 13, bold: true, color: { argb: 'FFFFFF' } };
+		titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'B91C1C' } };
+		titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+		worksheet.addRow([]);
+		worksheet.addRow(['Empresa:', companyName]);
 		worksheet.addRow(['Período:', `${formatarDataBR(datainicio)} até ${formatarDataBR(datafim)}`]);
 		worksheet.addRow([]);
 
-		const headers = ['Nº', 'Aluno', 'Turma', 'Freq. Média (%)', ...datas.map(d => formatarDataBR(d))];
-		worksheet.addRow(headers);
+		const headers = [
+			'Nº',
+			'Aluno',
+			'Turma',
+			...datas.map((d) => d.slice(5).replace('-', '/')),
+			'% Freq.'
+		];
+		const headerRow = worksheet.addRow(headers);
+		headerRow.eachCell((cell) => {
+			cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: '475569' } };
+			cell.font = { bold: true, color: { argb: 'FFFFFF' } };
+			cell.alignment = { horizontal: 'center' };
+		});
 
 		alunosUnicos.forEach((nome, idx) => {
 			const info = alunoInfoMap[nome];
 			const freq = getFrequenciaMedia(nome);
-			const rowData = [
+			const row = worksheet.addRow([
 				info?.chamada ?? idx + 1,
 				nome,
-				info?.turma,
-				freq + '%',
-				...datas.map(d => {
+				info?.turma ?? '—',
+				...datas.map((d) => {
 					const p = getPresenca(nome, d);
-					return p === true ? 'P' : p === false ? 'F' : '-';
-				})
-			];
-			worksheet.addRow(rowData);
+					return p === true ? '✓' : p === false ? '✕' : '—';
+				}),
+				`${freq}%`
+			]);
+
+			row.eachCell((cell, col) => {
+				cell.border = {
+					top: { style: 'thin', color: { argb: 'E2E8F0' } },
+					bottom: { style: 'thin', color: { argb: 'E2E8F0' } },
+					left: { style: 'thin', color: { argb: 'E2E8F0' } },
+					right: { style: 'thin', color: { argb: 'E2E8F0' } }
+				};
+				if (col > 3 && col < headers.length) {
+					cell.alignment = { horizontal: 'center' };
+					if (cell.value === '✓') {
+						cell.font = { bold: true, color: { argb: '166534' } };
+						cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'DCFCE7' } };
+					} else if (cell.value === '✕') {
+						cell.font = { bold: true, color: { argb: '991B1B' } };
+						cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FEE2E2' } };
+					}
+				}
+				if (col === headers.length) {
+					cell.font = { bold: true, color: { argb: freq >= 75 ? '166534' : '991B1B' } };
+					cell.alignment = { horizontal: 'center' };
+				}
+			});
+		});
+
+		worksheet.columns.forEach((col) => {
+			let max = 10;
+			col.eachCell!({ includeEmpty: true }, (cell) => {
+				const len = cell.value ? cell.value.toString().length : 0;
+				if (len > max) max = len;
+			});
+			col.width = max + 3;
 		});
 
 		const buffer = await workbook.xlsx.writeBuffer();
@@ -134,7 +172,7 @@
 </script>
 
 <div class="flex flex-col gap-6">
-<div class="flex items-center justify-between">
+	<div class="flex items-center justify-between">
 		<h1 class="text-2xl font-bold text-gray-800">Relatório de Presença</h1>
 		<div class="flex gap-3">
 			<button
@@ -175,45 +213,69 @@
 		</div>
 	</div>
 	<!-- Filtros -->
-	<div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 grid grid-cols-1 md:grid-cols-4 gap-4 print:hidden">
-		<div class="flex flex-col gap-1">
-			<label class="text-xs font-semibold tracking-wide text-gray-400 uppercase">Data Início</label>
-			<input type="date" bind:value={datainicio} class="border border-gray-200 rounded-lg p-2 text-sm">
-		</div>
-		<div class="flex flex-col gap-1">
-			<label class="text-xs font-semibold tracking-wide text-gray-400 uppercase">Data Fim</label>
-			<input type="date" bind:value={datafim} class="border border-gray-200 rounded-lg p-2 text-sm">
-		</div>
-		<div class="flex min-w-48 flex-col gap-1">
-			<label class="text-xs font-bold text-gray-400 uppercase">Disciplina</label>
-			<select bind:value={disciplinaSelecionada} class="border border-gray-200 rounded-lg p-2 text-sm bg-white">
-				<option value="todas">Todas as Disciplinas</option>
-				{#each disciplinas as d}
-					<option value={d}>{d}</option>
-				{/each}
-			</select>
-		</div>
+	<div class="flex flex-col gap-1">
+		<label for="datainicio" class="text-xs font-semibold tracking-wide text-gray-400 uppercase"
+			>Data Início</label
+		>
+		<input
+			id="datainicio"
+			type="date"
+			bind:value={datainicio}
+			onchange={carregarDados}
+			class="rounded-lg border border-gray-200 p-2 text-sm"
+		/>
+	</div>
+	<div class="flex flex-col gap-1">
+		<label for="datafim" class="text-xs font-semibold tracking-wide text-gray-400 uppercase"
+			>Data Fim</label
+		>
+		<input
+			id="datafim"
+			type="date"
+			bind:value={datafim}
+			onchange={carregarDados}
+			class="rounded-lg border border-gray-200 p-2 text-sm"
+		/>
+	</div>
+	<div class="flex flex-col gap-1">
+		<label for="disciplina" class="text-xs font-bold text-gray-400 uppercase">Disciplina</label>
+		<select
+			id="disciplina"
+			bind:value={disciplinaSelecionada}
+			class="rounded-lg border border-gray-200 bg-white p-2 text-sm"
+		>
+			<option value="todas">Todas as Disciplinas</option>
+			{#each disciplinas as d}
+				<option value={d}>{d}</option>
+			{/each}
+		</select>
 	</div>
 
 	<!-- Tabela de Frequência -->
-	<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-		<div class="p-6 border-b border-gray-100 flex justify-between items-center">
+	<div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+		<div class="flex items-center justify-between border-b border-gray-100 p-6">
 			<h3 class="font-bold text-gray-700">Frequência Diária</h3>
 			<span class="text-xs text-gray-400">{alunosUnicos.length} alunos vinculados</span>
 		</div>
 		<div class="overflow-x-auto">
-			<table class="w-full text-left border-collapse">
+			<table class="w-full border-collapse text-left">
 				<thead>
 					<tr class="bg-gray-50">
-						<th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b">Nº</th>
-						<th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b">Aluno</th>
-						<th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b text-center">Turma</th>
+						<th class="border-b px-6 py-4 text-xs font-bold text-gray-500 uppercase">Nº</th>
+						<th class="border-b px-6 py-4 text-xs font-bold text-gray-500 uppercase">Aluno</th>
+						<th class="border-b px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase"
+							>Turma</th
+						>
 						{#each datas as data}
-							<th class="px-3 py-4 text-xs font-bold text-gray-500 uppercase border-b text-center min-w-[60px]">
+							<th
+								class="min-w-[60px] border-b px-3 py-4 text-center text-xs font-bold text-gray-500 uppercase"
+							>
 								{data.slice(8)}/{data.slice(5, 7)}
 							</th>
 						{/each}
-						<th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase border-b text-right">Média</th>
+						<th class="border-b px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase"
+							>Média</th
+						>
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-gray-100">
@@ -224,7 +286,7 @@
 							<td class="px-6 py-4 text-sm text-gray-400">{info?.chamada ?? i + 1}</td>
 							<td class="px-6 py-4 font-medium text-gray-800">{nome}</td>
 							<td class="px-6 py-4 text-center">
-								<span class="text-xs font-bold bg-blue-50 text-blue-600 px-2 py-1 rounded">
+								<span class="rounded bg-blue-50 px-2 py-1 text-xs font-bold text-blue-600">
 									{info?.turma}
 								</span>
 							</td>
@@ -232,15 +294,19 @@
 								{@const p = getPresenca(nome, data)}
 								<td class="px-3 py-4 text-center">
 									{#if p === true}
-										<span class="text-green-600 font-bold">✓</span>
+										<span class="font-bold text-green-600">✓</span>
 									{:else if p === false}
-										<span class="text-red-500 font-bold">✕</span>
+										<span class="font-bold text-red-500">✕</span>
 									{:else}
 										<span class="text-gray-300">-</span>
 									{/if}
 								</td>
 							{/each}
-							<td class="px-6 py-4 text-right font-bold {freq >= 75 ? 'text-green-600' : 'text-red-600'}">
+							<td
+								class="px-6 py-4 text-right font-bold {freq >= 75
+									? 'text-green-600'
+									: 'text-red-600'}"
+							>
 								{freq}%
 							</td>
 						</tr>
@@ -251,23 +317,26 @@
 	</div>
 
 	<!-- Detalhamento de Faltas por Disciplina -->
-	<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+	<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 		{#each alunosUnicos as nome}
-			<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-				<div class="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+			<div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+				<div class="flex items-center justify-between border-b border-gray-200 bg-gray-50 p-4">
 					<h4 class="font-bold text-gray-700">{nome}</h4>
 					<span class="text-xs font-medium text-gray-500">{alunoInfoMap[nome]?.turma}</span>
 				</div>
 				<div class="p-4">
-					<p class="text-xs font-bold text-gray-400 uppercase mb-3">Faltas por Disciplina</p>
+					<p class="mb-3 text-xs font-bold text-gray-400 uppercase">Faltas por Disciplina</p>
 					<div class="space-y-3">
 						{#each disciplinas as disc}
 							{@const faltas = getFaltasPorDisciplina(nome, disc)}
 							<div class="flex items-center justify-between">
 								<span class="text-sm text-gray-600">{disc}</span>
 								<div class="flex items-center gap-3">
-									<div class="w-32 h-2 bg-gray-100 rounded-full overflow-hidden">
-										<div class="h-full bg-red-500" style="width: {Math.min(faltas * 10, 100)}%"></div>
+									<div class="h-2 w-32 overflow-hidden rounded-full bg-gray-100">
+										<div
+											class="h-full bg-red-500"
+											style="width: {Math.min(faltas * 10, 100)}%"
+										></div>
 									</div>
 									<span class="text-xs font-bold {faltas > 0 ? 'text-red-600' : 'text-gray-400'}">
 										{faltas} faltas
@@ -284,7 +353,8 @@
 
 <style>
 	@media print {
-		header, .print\:hidden {
+		header,
+		.print\:hidden {
 			display: none !important;
 		}
 		main {
