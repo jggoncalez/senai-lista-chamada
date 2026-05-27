@@ -12,7 +12,6 @@ class Aluno(Base):
     nome = Column(String(200), nullable=False)
     empresa = Column(String(100), nullable=True)
     ra = Column(String(50), unique=True, nullable=True)
-    chamada = Column(Integer, nullable=True)
     ativo = Column(Boolean, default=True)
     criado_em = Column(DateTime, server_default=func.now())
     atualizado_em = Column(DateTime, server_default=func.now())

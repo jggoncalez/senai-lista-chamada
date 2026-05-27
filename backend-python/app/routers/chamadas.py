@@ -34,6 +34,8 @@ def registrar(dados: PresencaCreate, db: Session = Depends(get_db)):
 def atualizar(presenca_id: int, dados: PresencaUpdate, db: Session = Depends(get_db)):
     return chamada_service.atualizar(db, presenca_id, dados)
 
-@router.get("/relatorio", response_model=list[ChamadaRelatorioResponse])
-def relatorio(turma: str, data: Optional[str] = None, db: Session = Depends(get_db)):
-    return chamada_service.relatorio(db, turma, data)
+@router.post("/relatorio-semanal", tags=["chamadas"])
+def enviar_relatorio_semanal_manual(db: Session = Depends(get_db)):
+    from app.services.email_service import enviar_relatorio_semanal
+    enviar_relatorio_semanal(db)
+    return {"status": "ok", "mensagem": "Relatórios enviados com sucesso"}
