@@ -368,6 +368,6 @@ def notificar_chamada(
 
     try:
         with httpx.Client(timeout=10.0) as client:
-            client.post(TEAMS_WEBHOOK_URL, json=payload)
+            client.post(webhook_url, json=payload)
     except Exception:
         pass
