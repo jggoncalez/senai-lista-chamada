@@ -35,5 +35,12 @@ def atualizar(presenca_id: int, dados: PresencaUpdate, db: Session = Depends(get
     return chamada_service.atualizar(db, presenca_id, dados)
 
 @router.get("/relatorio", response_model=list[ChamadaRelatorioResponse])
-def relatorio(turma: str, data: Optional[str] = None, db: Session = Depends(get_db)):
-    return chamada_service.relatorio(db, turma, data)
+def relatorio(
+    turma: Optional[str] = None,
+    empresa: Optional[str] = None,
+    data: Optional[str] = None,
+    data_inicio: Optional[str] = None,
+    data_fim: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    return chamada_service.relatorio(db, turma, empresa, data, data_inicio, data_fim)

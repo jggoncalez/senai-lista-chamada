@@ -40,3 +40,4 @@ class AlunoImport(BaseModel):
     cod_turma: str
     chamada: Optional[int] = None
     termo: Optional[int] = None
+    ra: Optional[str] = None  # ← adiciona isso

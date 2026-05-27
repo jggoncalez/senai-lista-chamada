@@ -44,7 +44,7 @@
 		}))
 	);
 
-	onMount(async () => {
+onMount(async () => {
   try {
     const [alunosData, cursosData] = await Promise.all([
       alunosApi.porTurma(cod),
@@ -55,7 +55,6 @@
     presencaMap = Object.fromEntries(alunosData.map((a: Aluno) => [a.id, true]));
     cursosMap = Object.fromEntries(cursosData.map((c: CursoItem) => [c.id, c.nome]));
 
-    // Busca professor separado para não quebrar tudo se falhar
     try {
       const user = await usuarioApi.buscar();
       professorId = user.id;
@@ -64,15 +63,15 @@
       console.error('Falha ao buscar professor');
     }
 
-    const todasTD = await fetch(`http://localhost:8000/turma-disciplinas?apenas_ativas=true`)
-      .then(r => r.json()) as TurmaDisciplinaItem[];
-    
+    // Busca turma pelo cod_turma e filtra turma-disciplinas corretamente
     const turmasResp = await fetch(`http://localhost:8000/turmas`).then(r => r.json());
     const turmaObj = turmasResp.find((t: { id: number; cod_turma: string }) => t.cod_turma === cod);
-    
+
     if (turmaObj) {
-      tdList = todasTD.filter((td: TurmaDisciplinaItem) => td.turma_id === turmaObj.id);
+      tdList = await fetch(`http://localhost:8000/turma-disciplinas?turma_id=${turmaObj.id}&apenas_ativas=true`)
+        .then(r => r.json()) as TurmaDisciplinaItem[];
     }
+
   } catch {
     erro = 'Erro ao carregar dados. Backend rodando?';
   } finally {

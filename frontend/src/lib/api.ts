@@ -116,6 +116,12 @@ export const sessoes = {
     data_aula: string;
   }) => apiFetch('/sessoes', { method: 'POST', body: JSON.stringify(dados) }) as Promise<SessaoItem>,
 };
+export const empresas = {
+    listar: (): Promise<string[]> =>
+        apiFetch('/alunos').then((alunos: AlunoResponse[]) =>
+            [...new Set(alunos.map((a: any) => a.empresa).filter(Boolean))].sort()
+        ),
+};
 
 export const chamadas = {
   // Salva chamada completa (fluxo novo: sessão → lote)
@@ -137,12 +143,13 @@ export const chamadas = {
   },
 
   // Relatório por empresa
-  listarPorEmpresa: (empresa: string, dataInicio = '', dataFim = ''): Promise<ChamadaItem[]> => {
+listarPorEmpresa: (empresa: string, dataInicio = '', dataFim = ''): Promise<ChamadaItem[]> => {
     const params = new URLSearchParams({ empresa });
     if (dataInicio) params.set('data_inicio', dataInicio);
     if (dataFim) params.set('data_fim', dataFim);
     return apiFetch(`/chamadas/relatorio?${params}`);
-  },
+},
+
 
   atualizar: (id: number, presente: boolean) =>
     apiFetch(`/chamadas/${id}`, { method: 'PATCH', body: JSON.stringify({ presente }) }),

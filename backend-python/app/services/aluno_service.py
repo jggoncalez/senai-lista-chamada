@@ -121,6 +121,7 @@ def importar_lote(db: Session, dados: list[AlunoImport]):
                 aluno = Aluno(
                     nome=item.nome,
                     turma_id=turma.id,
+                    ra=item.ra or None,
                     ativo=True
                 )
                 db.add(aluno)
