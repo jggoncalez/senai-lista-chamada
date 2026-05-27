@@ -342,7 +342,8 @@ def notificar_chamada(
     presentes: int,
     alunos_risco: list[dict]
 ):
-    if not TEAMS_WEBHOOK_URL:
+    webhook_url = TEAMS_WEBHOOK_URL or os.getenv("TEAMS_WEBHOOK_URL")
+    if not webhook_url:
         return
 
     ausentes = total - presentes
