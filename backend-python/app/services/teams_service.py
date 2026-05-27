@@ -105,32 +105,6 @@ def _build_adaptive_card(
         ],
     }
 
-    def _stat_column(label: str, value: str, style: str) -> dict:
-        return {
-            "type": "Column",
-            "width": "stretch",
-            "style": style,
-            "items": [
-                {
-                    "type": "TextBlock",
-                    "text": value,
-                    "weight": "Bolder",
-                    "size": "ExtraLarge",
-                    "horizontalAlignment": "Center",
-                },
-                {
-                    "type": "TextBlock",
-                    "text": label,
-                    "isSubtle": True,
-                    "size": "Small",
-                    "horizontalAlignment": "Center",
-                    "spacing": "None",
-                },
-            ],
-        }
-
-    ausentes_style = "Attention" if ausentes > 0 else "Good"
-
     stats = {
     "type": "ColumnSet",
     "spacing": "Medium",
