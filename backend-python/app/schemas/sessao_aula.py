@@ -7,7 +7,7 @@ from app.schemas.aluno import AlunoResponse
 
 class SessaoAulaBase(BaseModel):
     turma_disciplina_id: int
-    professor_id: int
+    professor_id: Optional[int] = None  # ← True
     data_aula: date
     observacao: Optional[str] = None
 

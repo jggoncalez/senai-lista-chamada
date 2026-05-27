@@ -1,64 +1,106 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { onMount } from 'svelte';
-  import { alunos as alunosApi, chamadas as chamadasApi,} from '$lib/api';
-  import type { ChamadaItem } from '$lib/api';
-  import type { ChamadaCreate } from '$lib/api';
+  import { 
+    alunos as alunosApi, 
+    turmaDisciplinas, 
+    chamadas as chamadasApi, 
+    cursos as cursosApi,
+    usuario as usuarioApi,   // ← adicione
+  } from '$lib/api';
+  import type { TurmaDisciplinaItem, CursoItem } from '$lib/api';
   import { goto } from '$app/navigation';
 
-  let cod = page.params.cod ?? '3DEVT';
+  let cod = page.params.cod ?? '';
   let dataAula = $state(new Date().toISOString().split('T')[0]);
-  let disciplinaSelecionada = $state('');
+  let disciplinaSelecionada = $state<number | null>(null);
+  let professorId = $state<number | null>(null);   // ← adicione
 
-  interface Aluno { id: number; nome: string; turma: string; cod_turma: string; chamada: number | null; }
-  let listaAlunos = $state<Aluno[]>([]) ;
+  interface Aluno { 
+    id: number; 
+    nome: string; 
+    turma: string; 
+    cod_turma: string; 
+    chamada: number | null; 
+  }
+  let listaAlunos = $state<Aluno[]>([]);
   let carregando = $state(true);
   let erro = $state('');
-  let presencaMap = $state<Record<string, boolean>>({});
+  let presencaMap = $state<Record<number, boolean>>({});
+  let tdList = $state<TurmaDisciplinaItem[]>([]);
+  let cursosMap = $state<Record<number, string>>({});
 
-  let nomeTurma = $derived(listaAlunos[0]?.turma ?? cod);
-  let chamadaTurma = $state<ChamadaItem[]>([]);
-    $effect(() => {
-    if (cod) {
-      chamadasApi.listarPorTurma(cod).then((data) => {
-        chamadaTurma = data;
-      });
-    } else {
-      chamadaTurma = [];
-    }
-  });
-   let disciplinas = $derived([...new Set(chamadaTurma.map((c) => c.disciplina))].sort());
+	let nomeTurma = $derived(listaAlunos[0]?.turma ?? cod);
+	let totalAlunos = $derived(listaAlunos.length);
+	let presentes = $derived(Object.values(presencaMap).filter(Boolean).length);
+	let ausentes = $derived(totalAlunos - presentes);
 
-  let totalAlunos = $derived(listaAlunos.length);
-  let presentes = $derived(Object.values(presencaMap).filter(Boolean).length);
-  let ausentes = $derived(totalAlunos - presentes);
+	// Disciplinas disponíveis com nome do curso
+	let disciplinasDisponiveis = $derived(
+		tdList.map((td) => ({
+			td_id: td.id,
+			curso_id: td.curso_id,
+			nome: cursosMap[td.curso_id] ?? `Disciplina ${td.curso_id}`
+		}))
+	);
 
-  onMount(async () => {
+	onMount(async () => {
+  try {
+    const [alunosData, cursosData] = await Promise.all([
+      alunosApi.porTurma(cod),
+      cursosApi.listar(),
+    ]);
+
+    listaAlunos = alunosData;
+    presencaMap = Object.fromEntries(alunosData.map((a: Aluno) => [a.id, true]));
+    cursosMap = Object.fromEntries(cursosData.map((c: CursoItem) => [c.id, c.nome]));
+
+    // Busca professor separado para não quebrar tudo se falhar
     try {
-      listaAlunos = await alunosApi.porTurma(cod);
-      presencaMap = Object.fromEntries(listaAlunos.map((a) => [a.nome, true]));
+      const user = await usuarioApi.buscar();
+      professorId = user.id;
+      console.log('professorId carregado:', professorId);
     } catch {
-      erro = 'Erro ao carregar alunos. Backend rodando?';
-    } finally {
-      carregando = false;
+      console.error('Falha ao buscar professor');
     }
-  });
 
+    const todasTD = await fetch(`http://localhost:8000/turma-disciplinas?apenas_ativas=true`)
+      .then(r => r.json()) as TurmaDisciplinaItem[];
+    
+    const turmasResp = await fetch(`http://localhost:8000/turmas`).then(r => r.json());
+    const turmaObj = turmasResp.find((t: { id: number; cod_turma: string }) => t.cod_turma === cod);
+    
+    if (turmaObj) {
+      tdList = todasTD.filter((td: TurmaDisciplinaItem) => td.turma_id === turmaObj.id);
+    }
+  } catch {
+    erro = 'Erro ao carregar dados. Backend rodando?';
+  } finally {
+    carregando = false;
+  }
+});
 
-  function togglePresenca(nomeAluno: string) {
-    presencaMap[nomeAluno] = !presencaMap[nomeAluno];
+	function togglePresenca(alunoId: number) {
+		presencaMap[alunoId] = !presencaMap[alunoId];
+	}
+
+	async function irParaConfirmar() {
+  if (!disciplinaSelecionada) return;
+  if (!professorId) {
+    erro = 'Professor não carregado. Recarregue a página.';
+    return;
   }
 
-function irParaConfirmar() {
   goto(`/chamada/${cod}/confirmar`, {
     state: {
-      // Use $state.snapshot() diretamente aqui
       nomeTurma: $state.snapshot(nomeTurma),
       dataAula: $state.snapshot(dataAula),
-      disciplinaSelecionada: $state.snapshot(disciplinaSelecionada),
+      disciplinaId: disciplinaSelecionada,
+      disciplinaNome: disciplinasDisponiveis.find(d => d.td_id === disciplinaSelecionada)?.nome ?? '',
       presencaMap: $state.snapshot(presencaMap),
-      listaAlunos: $state.snapshot(listaAlunos)
-    }
+      listaAlunos: $state.snapshot(listaAlunos),
+      professorId: $state.snapshot(professorId),
+    },
   });
 }
 </script>
@@ -86,19 +128,19 @@ function irParaConfirmar() {
 		<input
 			type="date"
 			bind:value={dataAula}
-			class="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
+			class="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-red-400 focus:outline-none"
 		/>
 	</div>
 
-	<div class="flex min-w-48 flex-col gap-1">
+	<div class="flex min-w-56 flex-col gap-1">
 		<label class="text-xs font-medium tracking-wide text-gray-400 uppercase">Disciplina</label>
 		<select
 			bind:value={disciplinaSelecionada}
-			class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
+			class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-red-400 focus:outline-none"
 		>
-			<option value="">Selecione...</option>
-			{#each disciplinas as d}
-				<option value={d}>{d}</option>
+			<option value={null}>Selecione...</option>
+			{#each disciplinasDisponiveis as d}
+				<option value={d.td_id}>{d.nome}</option>
 			{/each}
 		</select>
 	</div>
@@ -123,56 +165,82 @@ function irParaConfirmar() {
 </div>
 
 <!-- Tabela -->
-<div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-  {#if carregando}
-    <div class="py-12 text-center text-sm text-gray-400">Carregando alunos...</div>
-  {:else if erro}
-    <div class="py-12 text-center text-sm text-red-500">{erro}</div>
-  {:else}
-    <table class="w-full">
-      <thead>
-        <tr class="border-b border-gray-100">
-          <th class="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-6 py-4 w-24">N.Chamada</th>
-          <th class="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-6 py-4">Nome do Aluno</th>
-          <th class="text-right text-xs font-semibold text-gray-400 uppercase tracking-wide px-6 py-4 w-32">Presente</th>
-        </tr>
-      </thead>
-      <tbody>
-        {#each listaAlunos as aluno, i (aluno.id)}
-          <tr class="border-b border-gray-50 transition-colors {presencaMap[aluno.nome] ? 'bg-white' : 'bg-red-50'}">
-            <td class="px-6 py-4 text-sm font-medium {presencaMap[aluno.nome] ? 'text-gray-400' : 'text-red-300'}">
-              {aluno.chamada ?? i + 1}
-            </td>
-            <td class="px-6 py-4 text-sm text-gray-700 font-medium">{aluno.nome}</td>
-            <td class="px-6 py-4 text-right">
-              <button
-                onclick={() => togglePresenca(aluno.nome)}
-                class="w-9 h-9 rounded-lg border-2 transition-all duration-150 flex items-center justify-center ml-auto
-                  {presencaMap[aluno.nome] ? 'bg-green-500 border-green-500 text-white' : 'bg-white border-gray-200 hover:border-green-400'}"
-              >
-                {#if presencaMap[aluno.nome]}
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586 4.707 9.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z" clip-rule="evenodd"/>
-                  </svg>
-                {/if}
-              </button>
-            </td>
-          </tr>
-        {/each}
-      </tbody>
-    </table>
-  {/if}
+<div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
+	{#if carregando}
+		<div class="py-12 text-center text-sm text-gray-400">Carregando alunos...</div>
+	{:else if erro}
+		<div class="py-12 text-center text-sm text-red-500">{erro}</div>
+	{:else}
+		<table class="w-full">
+			<thead>
+				<tr class="border-b border-gray-100">
+					<th
+						class="w-24 px-6 py-4 text-left text-xs font-semibold tracking-wide text-gray-400 uppercase"
+						>N.Chamada</th
+					>
+					<th
+						class="px-6 py-4 text-left text-xs font-semibold tracking-wide text-gray-400 uppercase"
+						>Nome do Aluno</th
+					>
+					<th
+						class="w-32 px-6 py-4 text-right text-xs font-semibold tracking-wide text-gray-400 uppercase"
+						>Presente</th
+					>
+				</tr>
+			</thead>
+			<tbody>
+				{#each listaAlunos as aluno, i (aluno.id)}
+					<tr
+						class="border-b border-gray-50 transition-colors {presencaMap[aluno.id]
+							? 'bg-white'
+							: 'bg-red-50'}"
+					>
+						<td
+							class="px-6 py-4 text-sm font-medium {presencaMap[aluno.id]
+								? 'text-gray-400'
+								: 'text-red-300'}"
+						>
+							{aluno.chamada ?? i + 1}
+						</td>
+						<td class="px-6 py-4 text-sm font-medium text-gray-700">{aluno.nome}</td>
+						<td class="px-6 py-4 text-right">
+							<button
+								onclick={() => togglePresenca(aluno.id)}
+								class="ml-auto flex h-9 w-9 items-center justify-center rounded-lg border-2 transition-all duration-150
+                  {presencaMap[aluno.id]
+									? 'border-green-500 bg-green-500 text-white'
+									: 'border-gray-200 bg-white hover:border-green-400'}"
+							>
+								{#if presencaMap[aluno.id]}
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										class="h-5 w-5"
+										viewBox="0 0 20 20"
+										fill="currentColor"
+									>
+										<path
+											fill-rule="evenodd"
+											d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586 4.707 9.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z"
+											clip-rule="evenodd"
+										/>
+									</svg>
+								{/if}
+							</button>
+						</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	{/if}
 </div>
 
 {#if disciplinaSelecionada && !carregando && !erro}
-  <div class="mt-6 flex justify-end">
-    <button
-      onclick={irParaConfirmar}
-      class="bg-red-600 hover:bg-red-700 text-white font-medium px-6 py-2.5 rounded-xl transition-colors"
-    >
-      Salvar Chamada
-    </button>
-  </div>
+	<div class="mt-6 flex justify-end">
+		<button
+			onclick={irParaConfirmar}
+			class="rounded-xl bg-red-600 px-6 py-2.5 font-medium text-white transition-colors hover:bg-red-700"
+		>
+			Salvar Chamada
+		</button>
+	</div>
 {/if}
-
-

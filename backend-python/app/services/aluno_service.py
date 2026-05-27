@@ -25,7 +25,7 @@ def listar(db: Session, turma_cod: str | None = None, apenas_ativos: bool = True
             "nome": a.nome,
             "empresa": a.empresa,
             "ra": a.ra,
-            "chamada": a.chamada,
+            "chamada": None,
             "ativo": a.ativo,
             "criado_em": a.criado_em,
             "atualizado_em": a.atualizado_em,
@@ -49,7 +49,7 @@ def criar(db: Session, dados: AlunoCreate) -> Aluno:
         existente = db.query(Aluno).filter(Aluno.ra == dados.ra).first()
         if existente:
             raise HTTPException(status_code=409, detail="RA já cadastrado")
-    aluno = Aluno(**dados.model_dump())
+    aluno = Aluno(**dados.model_dump(exclude={"chamada"}))  # ← exclui chamada
     try:
         db.add(aluno)
         db.commit()
@@ -62,7 +62,8 @@ def criar(db: Session, dados: AlunoCreate) -> Aluno:
 
 def atualizar(db: Session, aluno_id: int, dados: AlunoUpdate) -> Aluno:
     aluno = buscar(db, aluno_id)
-    campos = dados.model_dump(exclude_unset=True)
+    campos = dados.model_dump(exclude_unset=True, exclude={"chamada"})  # ← exclui chamada
+    ...
     if not campos:
         return aluno
     if "ra" in campos and campos["ra"] != aluno.ra and campos["ra"] is not None:
@@ -120,14 +121,12 @@ def importar_lote(db: Session, dados: list[AlunoImport]):
                 aluno = Aluno(
                     nome=item.nome,
                     turma_id=turma.id,
-                    chamada=item.chamada,
                     ativo=True
                 )
                 db.add(aluno)
                 sucesso += 1
                 detalhes.append({"nome": item.nome, "status": "sucesso", "mensagem": "Criado"})
             else:
-                aluno.chamada = item.chamada
                 aluno.ativo = True
                 sucesso += 1
                 detalhes.append({"nome": item.nome, "status": "sucesso", "mensagem": "Atualizado"})
