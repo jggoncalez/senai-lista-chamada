@@ -10,7 +10,7 @@
   // Importando os efeitos de transição do Svelte
   import { fade, fly } from 'svelte/transition';
 
-  let isPublicPage = $derived(['/login', '/login-empresa', '/selecao', '/dashboard-empresa'].includes(page.url.pathname));
+  let isPublicPage = $derived(['/login', '/login-empresa', '/selecao', '/dashboard-empresa', '/dashboard-empresa/relatorio'].includes(page.url.pathname));
   let { children } = $props();
 
   onMount(() => {

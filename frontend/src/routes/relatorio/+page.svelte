@@ -54,6 +54,16 @@
 	let datas = $derived([...new Set(alunosFiltrados.map((c) => c.data_aula.slice(0, 10)))].sort());
 	let alunosUnicos = $derived([...new Set(alunosFiltrados.map((c) => c.nome_aluno))]);
 
+	// Mapeamento de informações extras do aluno (como o número da chamada)
+	let alunoInfoMap = $derived(
+		alunosFiltrados.reduce((acc, c) => {
+			if (!acc[c.nome_aluno]) {
+				acc[c.nome_aluno] = { chamada: c.chamada };
+			}
+			return acc;
+		}, {} as Record<string, { chamada?: number | null }>)
+	);
+
 	function getPresenca(nomeAluno: string, data: string): boolean | null {
 		const registro = chamadaTurma.find(
 			(c) => c.nome_aluno === nomeAluno && c.data_aula.slice(0, 10) === data && c.cod_turma === cod
@@ -125,9 +135,10 @@
 		});
 
 		alunosUnicos.forEach((nomeAluno, idx) => {
+			const info = alunoInfoMap[nomeAluno];
 			const pct = getPorcentagem(nomeAluno);
 			const dadosLinha = [
-				idx + 1,
+				info?.chamada ?? idx + 1,
 				nomeAluno,
 				...datas.map((data) => {
 					const p = getPresenca(nomeAluno, data);
@@ -246,7 +257,7 @@
 			<input
 				type="date"
 				bind:value={datainicio}
-				class="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:outline-none"
+				class="border border-gray-200 rounded-lg p-2 text-sm"
 			/>
 		</div>
 		<div class="flex flex-col gap-1">
@@ -254,14 +265,14 @@
 			<input
 				type="date"
 				bind:value={datafim}
-				class="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:outline-none"
+				class="border border-gray-200 rounded-lg p-2 text-sm"
 			/>
 		</div>
 		<div class="flex min-w-48 flex-col gap-1">
-			<label class="text-xs font-semibold tracking-wide text-gray-400 uppercase">Disciplina</label>
+			<label class="text-xs font-bold text-gray-400 uppercas">Disciplina</label>
 			<select
 				bind:value={disciplinaSelecionada}
-				class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none"
+				class="border border-gray-200 rounded-lg p-2 text-sm bg-white"
 			>
 				<option value="">Selecione...</option>
 				<option value="todas">Todas</option>
@@ -337,7 +348,9 @@
 				{#each alunosUnicos as nomeAluno, i}
 					{@const pct = getPorcentagem(nomeAluno)}
 					<tr class="odds:bg-gray-50/20 hover:bg-slate-50/50">
-						<td class="px-4 py-3 text-sm font-semibold text-red-600/80">{i + 1}</td>
+						<td class="px-4 py-3 text-sm font-semibold text-red-600/80">
+							{alunoInfoMap[nomeAluno]?.chamada ?? i + 1}
+						</td>
 						<td class="px-6 py-4 text-sm font-medium text-gray-800">{nomeAluno}</td>
 
 						{#each datas as data}
