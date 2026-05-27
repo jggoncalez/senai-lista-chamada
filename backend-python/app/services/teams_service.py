@@ -41,7 +41,7 @@ def _gerar_resumo_ia(
                 - Alunos abaixo de 75%: {nomes_risco}
             """
     try:
-        client = genai.Client(api_key=GEMINI_API_KEY)
+        client = genai.Client(api_key=api_key)
         response = client.models.generate_content(
             model="gemini-2.5-flash",
             contents=prompt,
