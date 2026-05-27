@@ -31,18 +31,18 @@
     {@render children()}
   </div>
 {:else}
-  <div class="min-h-screen flex flex-col bg-gray-50 transition-colors duration-300">
-    
+  <div class="h-screen flex flex-col bg-gray-50 transition-colors duration-300">
+
     <div in:fly={{ y: -20, duration: 400 }}>
       <Navbar />
     </div>
 
-    <div class="flex flex-1 overflow-hidden">
-      <div in:fly={{ x: -40, duration: 400, delay: 100 }}>
+    <div class="flex flex-1 overflow-hidden min-h-0">
+      <div in:fly={{ x: -40, duration: 400, delay: 100 }} class="h-full">
         <Sidebar />
       </div>
-        <main 
-          class="flex-1 p-8 bg-gray-50 text-gray-900  transition-colors duration-300"
+        <main
+          class="flex-1 overflow-y-auto p-8 bg-gray-50 text-gray-900 transition-colors duration-300"
           in:fly={{ y: 15, duration: 350, delay: 200 }}
           out:fade={{ duration: 150 }}
         >
