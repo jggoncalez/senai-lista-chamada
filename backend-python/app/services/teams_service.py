@@ -14,7 +14,8 @@ def _gerar_resumo_ia(
     presentes: int,
     alunos_risco: list[dict]
 ) -> str:
-    if not GEMINI_API_KEY:
+    api_key = GEMINI_API_KEY or os.getenv("GEMINI_API_KEY")
+    if not api_key:
         return "Resumo indisponível — chave da IA não configurada."
 
     ausentes = total - presentes
