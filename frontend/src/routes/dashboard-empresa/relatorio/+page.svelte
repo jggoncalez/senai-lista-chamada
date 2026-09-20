@@ -273,6 +273,7 @@
 					{formatarDataBR(datainicio)} até {formatarDataBR(datafim)}
 				</p>
 			</div>
+			<p class="m-0 mt-2 text-right text-xs text-gray-500">Emitido em: {new Date().toLocaleString('pt-BR')}</p>
 		</div>
 
 		<div class="flex items-center justify-between border-b border-gray-100 p-6 print:hidden">
