@@ -23,7 +23,7 @@
     }
 </script>
 
-<div class="flex min-h-screen flex-col bg-gray-50">
+<div class="flex h-screen flex-col bg-gray-50">
 	<!-- Navbar Empresa -->
 	<nav
 		class="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6"
@@ -54,10 +54,10 @@
 </div>
 	</nav>
 
-	<div class="flex flex-1 overflow-hidden">
+	<div class="flex flex-1 overflow-hidden min-h-0">
 		<!-- Sidebar Empresa -->
 		<aside
-			class="flex h-[calc(100vh-64px)] w-64 flex-col gap-5 border-r border-gray-200 bg-white p-5"
+			class="flex h-full w-64 flex-col gap-5 border-r border-gray-200 bg-white p-5"
 		>
 			<a
 				href="/login"

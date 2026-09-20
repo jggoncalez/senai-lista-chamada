@@ -1,4 +1,4 @@
-<div class="bg-white min-h-screen w-64 flex border border-b border-gray-200 flex-col p-5 gap-5">
+<div class="bg-white h-full w-64 flex border-r border-gray-200 flex-col p-5 gap-5">
     <div>
         <a href="/login" class="bg-white border border-red-600 text-red-600 font-medium w-full h-10 flex items-center justify-center rounded hover:bg-red-600 hover:text-white transition-colors">
         <i><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#dc2626"><path d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z"/></svg></i>

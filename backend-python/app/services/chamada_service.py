@@ -60,7 +60,7 @@ def registrar_lote(
                 .first()
             )
             if existente:
-                existente.presente = item.presente
+                existente.faltas = item.faltas
                 if item.observacao is not None:
                     existente.observacao = item.observacao
                 resultado.append(existente)
@@ -68,7 +68,7 @@ def registrar_lote(
                 presenca = PresencaAluno(
                     sessao_id=sessao_id,
                     aluno_id=item.aluno_id,
-                    presente=item.presente,
+                    faltas=item.faltas,
                     observacao=item.observacao,
                 )
                 db.add(presenca)

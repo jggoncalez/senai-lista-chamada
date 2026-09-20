@@ -6,7 +6,7 @@ from datetime import date
 class PresencaBase(BaseModel):
     sessao_id: int
     aluno_id: int
-    presente: bool
+    faltas: int
     observacao: Optional[str] = None
 
 
@@ -15,7 +15,7 @@ class PresencaCreate(PresencaBase):
 
 
 class PresencaUpdate(BaseModel):
-    presente: Optional[bool] = None
+    faltas: Optional[int] = None
     observacao: Optional[str] = None
 
 
@@ -27,7 +27,7 @@ class PresencaResponse(PresencaBase):
 
 class ChamadaLoteItem(BaseModel):
     aluno_id: int
-    presente: bool
+    faltas: int
     observacao: Optional[str] = None
 
 
@@ -38,10 +38,10 @@ class ChamadaLoteCreate(BaseModel):
 class ChamadaRelatorioResponse(BaseModel):
     id: Optional[int] = None
     nome_aluno: str
-    cod_turma: Optional[str] = None   # ← era obrigatório, pode vir None em edge cases
+    cod_turma: Optional[str] = None
     chamada: Optional[int] = None
     data_aula: date
     disciplina: str
-    presente: bool
+    faltas: int
 
     model_config = ConfigDict(from_attributes=True)
